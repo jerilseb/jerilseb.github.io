@@ -1,0 +1,14 @@
+apiVersion: v1
+entries:
+  fastapi-hello:
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2025-01-08T16:56:18.569592324Z"
+    description: A Hello world app for Kubernetes
+    digest: 08694548b1cc56c75d2a0ba1463c8fc9d3a5021aaff3e65ba88e910fc4bd6314
+    name: fastapi-hello
+    type: application
+    urls:
+    - https://jerilseb.github.io/charts/fastapi-hello/fastapi-hello-1.0.0.tgz
+    version: 1.0.0
+generated: "2025-01-08T16:56:18.557170176Z"
