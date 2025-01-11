@@ -3,7 +3,7 @@ entries:
   fastapi-hello:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-01-11T06:29:29.581640557Z"
+    created: "2025-01-11T06:37:59.340066202Z"
     description: A Hello world app for Kubernetes
     digest: 0fb6fe7ccc57b6c906744b3d062f2840b96bfdc3abafac3b485acd9e60b903e2
     name: fastapi-hello
@@ -14,12 +14,12 @@ entries:
   jupyterlab:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2025-01-11T06:29:29.581745955Z"
+    created: "2025-01-11T06:37:59.340228045Z"
     description: A Helm chart for JupyterLab
-    digest: e046b19f6252bc14daba00325aaeec5033a81f3321a6aa6ee6fc02a2a4e98303
+    digest: 7b21ba5e32ef8c9558cbfd33ecf6126135bf1f17ff76057a60f7e96fa1d300f5
     name: jupyterlab
     type: application
     urls:
-    - https://jerilseb.github.io/charts/jupyterlab-1.0.3.tgz
-    version: 1.0.3
-generated: "2025-01-11T06:29:29.581444551Z"
+    - https://jerilseb.github.io/charts/jupyterlab-1.0.4.tgz
+    version: 1.0.4
+generated: "2025-01-11T06:37:59.339082085Z"
