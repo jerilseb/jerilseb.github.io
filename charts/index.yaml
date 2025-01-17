@@ -3,7 +3,7 @@ entries:
   fastapi-hello:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-01-17T12:54:37.226250292Z"
+    created: "2025-01-17T19:12:20.41302584Z"
     description: A Hello world app for Kubernetes
     digest: 7af7f4e228f1246a0a04f1c8c9b31398e02c7b6db43a230fafd625c752840693
     name: fastapi-hello
@@ -14,7 +14,7 @@ entries:
   jupyterlab:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2025-01-17T12:54:37.226568635Z"
+    created: "2025-01-17T19:12:20.413209598Z"
     description: A Helm chart for JupyterLab
     digest: 7b21ba5e32ef8c9558cbfd33ecf6126135bf1f17ff76057a60f7e96fa1d300f5
     name: jupyterlab
@@ -22,14 +22,14 @@ entries:
     urls:
     - https://jerilseb.github.io/charts/jupyterlab-1.0.4.tgz
     version: 1.0.4
-  spot-termination-handler:
+  node-housekeeper:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-01-17T12:54:37.226678868Z"
-    description: A simple Helm chart for an EC2 termination handler
-    digest: ebc34fb6dbe18186fe3ee866575ad1f20c36163f89a786b8a2642389a388f51f
-    name: spot-termination-handler
+    created: "2025-01-17T19:12:20.413290028Z"
+    description: A Daemonset for node housekeeping
+    digest: 7a46373ece27ff023a3aee7406c54c58b70daf504d16cffa2a6e0b0a633f7425
+    name: node-housekeeper
     urls:
-    - https://jerilseb.github.io/charts/spot-termination-handler-1.0.11.tgz
-    version: 1.0.11
-generated: "2025-01-17T12:54:37.225258359Z"
+    - https://jerilseb.github.io/charts/node-housekeeper-1.0.1.tgz
+    version: 1.0.1
+generated: "2025-01-17T19:12:20.412829389Z"
