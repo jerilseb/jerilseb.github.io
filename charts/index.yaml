@@ -3,7 +3,7 @@ entries:
   fastapi-hello:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-01-17T08:00:11.956502381Z"
+    created: "2025-01-17T08:02:22.691366535Z"
     description: A Hello world app for Kubernetes
     digest: 7af7f4e228f1246a0a04f1c8c9b31398e02c7b6db43a230fafd625c752840693
     name: fastapi-hello
@@ -14,7 +14,7 @@ entries:
   jupyterlab:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2025-01-17T08:00:11.957374328Z"
+    created: "2025-01-17T08:02:22.691465613Z"
     description: A Helm chart for JupyterLab
     digest: 7b21ba5e32ef8c9558cbfd33ecf6126135bf1f17ff76057a60f7e96fa1d300f5
     name: jupyterlab
@@ -25,11 +25,11 @@ entries:
   spot-termination-handler:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-01-17T08:00:11.957467182Z"
+    created: "2025-01-17T08:02:22.691554346Z"
     description: A simple Helm chart for an EC2 termination handler
-    digest: 8f9d7004f21d571142a251625df5d8e81bff50be799bb6c19dcfb17754a1318c
+    digest: f74e0fdd76d013318467c39f73eb273443564c928ac36ba5458b85b835128cb2
     name: spot-termination-handler
     urls:
-    - https://jerilseb.github.io/charts/spot-termination-handler-1.0.9.tgz
-    version: 1.0.9
-generated: "2025-01-17T08:00:11.955242609Z"
+    - https://jerilseb.github.io/charts/spot-termination-handler-1.0.10.tgz
+    version: 1.0.10
+generated: "2025-01-17T08:02:22.691102877Z"
