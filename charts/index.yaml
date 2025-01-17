@@ -3,7 +3,7 @@ entries:
   fastapi-hello:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-01-17T19:18:11.151596759Z"
+    created: "2025-01-17T19:21:48.777082278Z"
     description: A Hello world app for Kubernetes
     digest: 7af7f4e228f1246a0a04f1c8c9b31398e02c7b6db43a230fafd625c752840693
     name: fastapi-hello
@@ -14,7 +14,7 @@ entries:
   jupyterlab:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2025-01-17T19:18:11.151700087Z"
+    created: "2025-01-17T19:21:48.777189675Z"
     description: A Helm chart for JupyterLab
     digest: 7b21ba5e32ef8c9558cbfd33ecf6126135bf1f17ff76057a60f7e96fa1d300f5
     name: jupyterlab
@@ -25,11 +25,11 @@ entries:
   node-housekeeper:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-01-17T19:18:11.151770903Z"
+    created: "2025-01-17T19:21:48.777281661Z"
     description: A Daemonset for node housekeeping
-    digest: 961315bccded21c76c7dbb0c85bef4d47229555c0bd7b57f714999155720477d
+    digest: f14bdedd96ff8abc8e87382d2d20cd3d4b24f6086bea5113f4ac87275bd7b4c1
     name: node-housekeeper
     urls:
-    - https://jerilseb.github.io/charts/node-housekeeper-1.0.3.tgz
-    version: 1.0.3
-generated: "2025-01-17T19:18:11.15138938Z"
+    - https://jerilseb.github.io/charts/node-housekeeper-1.0.4.tgz
+    version: 1.0.4
+generated: "2025-01-17T19:21:48.776820791Z"
