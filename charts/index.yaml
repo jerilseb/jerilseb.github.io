@@ -3,18 +3,18 @@ entries:
   fastapi-hello:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-01-18T04:44:00.009937028Z"
+    created: "2025-01-18T17:21:19.51998162Z"
     description: A Hello world app for Kubernetes
-    digest: 7af7f4e228f1246a0a04f1c8c9b31398e02c7b6db43a230fafd625c752840693
+    digest: bfaffdd906a2254974fef824f1e7fbe0ed7f835becb21949d829db2aeb29fafd
     name: fastapi-hello
     type: application
     urls:
-    - https://jerilseb.github.io/charts/fastapi-hello-1.0.4.tgz
-    version: 1.0.4
+    - https://jerilseb.github.io/charts/fastapi-hello-1.0.5.tgz
+    version: 1.0.5
   jupyterlab:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2025-01-18T04:44:00.010295161Z"
+    created: "2025-01-18T17:21:19.520456337Z"
     description: A Helm chart for JupyterLab
     digest: 7b21ba5e32ef8c9558cbfd33ecf6126135bf1f17ff76057a60f7e96fa1d300f5
     name: jupyterlab
@@ -25,11 +25,11 @@ entries:
   node-housekeeper:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-01-18T04:44:00.010382794Z"
+    created: "2025-01-18T17:21:19.520774984Z"
     description: A Daemonset for node housekeeping
     digest: 4c1662cc2e62ddc33899bc0ad5381ff6e7852b3486c5f07a2346cc40c350f095
     name: node-housekeeper
     urls:
     - https://jerilseb.github.io/charts/node-housekeeper-1.0.6.tgz
     version: 1.0.6
-generated: "2025-01-18T04:44:00.009090401Z"
+generated: "2025-01-18T17:21:19.519204765Z"
