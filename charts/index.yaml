@@ -3,7 +3,7 @@ entries:
   fastapi-hello:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-01-20T12:26:58.599907701Z"
+    created: "2025-01-20T12:37:26.721669635Z"
     description: A Hello world app for Kubernetes
     digest: 684a0fdc732b6880107677472c5ccdcc9bb13aa82101464220df9103b4830f36
     name: fastapi-hello
@@ -14,7 +14,7 @@ entries:
   jupyterlab:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2025-01-20T12:26:58.600781317Z"
+    created: "2025-01-20T12:37:26.722177682Z"
     description: A Helm chart for JupyterLab
     digest: 7b21ba5e32ef8c9558cbfd33ecf6126135bf1f17ff76057a60f7e96fa1d300f5
     name: jupyterlab
@@ -25,21 +25,21 @@ entries:
   node-cleanup-controller:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-01-20T12:26:58.600987476Z"
+    created: "2025-01-20T12:37:26.722284907Z"
     description: A controller for cleaning up dead nodes
-    digest: 2da837276ab84ad5a2200b5468006d6ea8641689a58889a3f909fd966f35dbd9
+    digest: 7bd72726ef8b36fd20229cada93905bb07287decb79fbb6962aa848206d7c74c
     name: node-cleanup-controller
     urls:
-    - https://jerilseb.github.io/charts/node-cleanup-controller-1.0.1.tgz
-    version: 1.0.1
+    - https://jerilseb.github.io/charts/node-cleanup-controller-1.0.2.tgz
+    version: 1.0.2
   node-housekeeper:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-01-20T12:26:58.601596567Z"
+    created: "2025-01-20T12:37:26.722579124Z"
     description: A Daemonset for node housekeeping
     digest: 4c1662cc2e62ddc33899bc0ad5381ff6e7852b3486c5f07a2346cc40c350f095
     name: node-housekeeper
     urls:
     - https://jerilseb.github.io/charts/node-housekeeper-1.0.6.tgz
     version: 1.0.6
-generated: "2025-01-20T12:26:58.597759552Z"
+generated: "2025-01-20T12:37:26.720738699Z"
