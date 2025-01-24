@@ -3,9 +3,9 @@ entries:
   fastapi-hello:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-01-24T18:19:04.313352748Z"
+    created: "2025-01-24T18:20:32.473536469Z"
     description: A Hello world app for Kubernetes
-    digest: c3d44dca73a91e58f4138e48f907138b7103cb5b060097d037198db280878372
+    digest: d7eb2acf8d376de68b268d8d70eece5c3a261f2a7674db4878cfeebeb949ad5b
     name: fastapi-hello
     type: application
     urls:
@@ -14,7 +14,7 @@ entries:
   go-hello:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-01-24T18:19:04.313499918Z"
+    created: "2025-01-24T18:20:32.473659613Z"
     description: A Hello world app for Kubernetes
     digest: 2c7ce0b048206d101c0f59c755b0cbe9bbe5bc6717b92989965e3b7c2236ef9c
     name: go-hello
@@ -24,7 +24,7 @@ entries:
     version: 1.0.1
   hello-operator:
   - apiVersion: v2
-    created: "2025-01-24T18:19:04.313573174Z"
+    created: "2025-01-24T18:20:32.473776438Z"
     description: A simple Helm chart for the Hello Custom Controller
     digest: fd7decd67b5baadc69062824fef8093c8768776143f4866449a8b4ec67746fe1
     name: hello-operator
@@ -34,7 +34,7 @@ entries:
   jupyterlab:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2025-01-24T18:19:04.313678411Z"
+    created: "2025-01-24T18:20:32.473888341Z"
     description: A Helm chart for JupyterLab
     digest: 7b21ba5e32ef8c9558cbfd33ecf6126135bf1f17ff76057a60f7e96fa1d300f5
     name: jupyterlab
@@ -45,7 +45,7 @@ entries:
   node-cleanup-controller:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-01-24T18:19:04.313732347Z"
+    created: "2025-01-24T18:20:32.47395671Z"
     description: A controller for cleaning up dead nodes
     digest: 7bd72726ef8b36fd20229cada93905bb07287decb79fbb6962aa848206d7c74c
     name: node-cleanup-controller
@@ -55,11 +55,11 @@ entries:
   node-housekeeper:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-01-24T18:19:04.313957014Z"
+    created: "2025-01-24T18:20:32.47402266Z"
     description: A Daemonset for node housekeeping
     digest: e56e9db60545700c23b5eaaf07b83afdde4c2049db44260ddb40164bf3858eb2
     name: node-housekeeper
     urls:
     - https://jerilseb.github.io/charts/node-housekeeper-1.0.7.tgz
     version: 1.0.7
-generated: "2025-01-24T18:19:04.313062898Z"
+generated: "2025-01-24T18:20:32.473317722Z"
