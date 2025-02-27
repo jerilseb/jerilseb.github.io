@@ -605,10 +605,7 @@ function shoot() {
 }
 
 // Event listeners
-canvas.addEventListener('click', function(event) {
-    // Prevent default behavior
-    event.preventDefault();
-    
+document.addEventListener('click', function(event) {
     if (gameState === 'start') {
         startGame();
     } else if (gameState === 'playing') {
@@ -617,9 +614,11 @@ canvas.addEventListener('click', function(event) {
 });
 
 // Touch events for mobile
-canvas.addEventListener('touchstart', function(event) {
-    // Prevent default behavior (scrolling, zooming)
-    event.preventDefault();
+document.addEventListener('touchstart', function(event) {
+    // Prevent default behavior (scrolling, zooming) only during gameplay
+    if (gameState === 'playing') {
+        event.preventDefault();
+    }
     
     if (gameState === 'start') {
         startGame();
@@ -627,6 +626,19 @@ canvas.addEventListener('touchstart', function(event) {
         flap();
     }
 }, { passive: false });
+
+// Add specific listeners for the start screen
+startScreen.addEventListener('click', function(event) {
+    if (gameState === 'start') {
+        startGame();
+    }
+});
+
+startScreen.addEventListener('touchstart', function(event) {
+    if (gameState === 'start') {
+        startGame();
+    }
+});
 
 // Shoot button event listeners
 shootButton.addEventListener('click', function(event) {
