@@ -14,7 +14,7 @@ function resizeCanvas() {
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
 
-// Mouse tracking
+// Interaction tracking (mouse and touch)
 const mouse = {
     x: undefined,
     y: undefined,
@@ -23,22 +23,28 @@ const mouse = {
     lastX: undefined,
     lastY: undefined,
     velocityX: 0,
-    velocityY: 0
+    velocityY: 0,
+    isActive: false, // Track if interaction is happening
+    isDragging: false // Track if user is dragging (mouse down or touch)
 };
 
-// Track mouse movement
-window.addEventListener('mousemove', (event) => {
-    // Calculate mouse velocity
+// Helper function to update mouse/touch position
+function updateInteraction(clientX, clientY) {
+    // Only update if dragging
+    if (!mouse.isDragging) return;
+    
+    // Calculate velocity
     if (mouse.lastX !== undefined) {
-        mouse.velocityX = event.clientX - mouse.lastX;
-        mouse.velocityY = event.clientY - mouse.lastY;
+        mouse.velocityX = clientX - mouse.lastX;
+        mouse.velocityY = clientY - mouse.lastY;
     }
     
-    mouse.lastX = event.clientX;
-    mouse.lastY = event.clientY;
-    mouse.x = event.clientX;
-    mouse.y = event.clientY;
+    mouse.lastX = clientX;
+    mouse.lastY = clientY;
+    mouse.x = clientX;
+    mouse.y = clientY;
     mouse.isMoving = true;
+    mouse.isActive = true;
     
     // Reset isMoving after a short delay
     clearTimeout(mouse.timeout);
@@ -47,6 +53,59 @@ window.addEventListener('mousemove', (event) => {
         mouse.velocityX = 0;
         mouse.velocityY = 0;
     }, 100);
+}
+
+// Track mouse movement only when dragging
+window.addEventListener('mousemove', (event) => {
+    updateInteraction(event.clientX, event.clientY);
+});
+
+// Handle mouse down - start dragging
+window.addEventListener('mousedown', (event) => {
+    mouse.isDragging = true;
+    mouse.x = event.clientX;
+    mouse.y = event.clientY;
+    mouse.lastX = event.clientX;
+    mouse.lastY = event.clientY;
+    mouse.isActive = true;
+});
+
+// Handle mouse up - stop dragging
+window.addEventListener('mouseup', () => {
+    mouse.isDragging = false;
+    mouse.isActive = false;
+});
+
+// Handle touch events
+window.addEventListener('touchstart', (event) => {
+    event.preventDefault(); // Prevent scrolling when touching the canvas
+    if (event.touches.length > 0) {
+        const touch = event.touches[0];
+        mouse.isDragging = true;
+        mouse.x = touch.clientX;
+        mouse.y = touch.clientY;
+        mouse.lastX = touch.clientX;
+        mouse.lastY = touch.clientY;
+        mouse.isActive = true;
+    }
+});
+
+window.addEventListener('touchmove', (event) => {
+    event.preventDefault(); // Prevent scrolling when touching the canvas
+    if (event.touches.length > 0 && mouse.isDragging) {
+        const touch = event.touches[0];
+        updateInteraction(touch.clientX, touch.clientY);
+    }
+});
+
+window.addEventListener('touchend', () => {
+    mouse.isDragging = false;
+    mouse.isActive = false;
+});
+
+// Handle mouse leaving the window
+window.addEventListener('mouseout', () => {
+    mouse.isActive = false;
 });
 
 // Spatial grid for efficient collision detection
@@ -505,16 +564,16 @@ function animate(timestamp) {
         spatialGrid.clear();
     }
     
-    // Process mouse interaction with points using spatial grid
-    if (mouse.x !== undefined && mouse.y !== undefined) {
-        // Draw mouse pointer (only when not in low performance mode)
+    // Process interaction with points using spatial grid
+    if (mouse.x !== undefined && mouse.y !== undefined && mouse.isActive) {
+        // Draw interaction pointer (only when not in low performance mode)
         if (!performance.isLowPerformance) {
             ctx.beginPath();
             ctx.arc(mouse.x, mouse.y, 8, 0, Math.PI * 2);
             ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
             ctx.fill();
             
-            // Draw interaction radius when mouse is moving
+            // Draw interaction radius when moving
             if (mouse.isMoving) {
                 ctx.beginPath();
                 ctx.arc(mouse.x, mouse.y, mouse.radius, 0, Math.PI * 2);
@@ -531,8 +590,8 @@ function animate(timestamp) {
         string.update(GRAVITY, FRICTION, quality.mouseInteractionSkip);
     }
     
-    // Apply mouse forces using spatial grid for efficiency
-    if (mouse.x !== undefined && mouse.y !== undefined) {
+    // Apply interaction forces using spatial grid for efficiency
+    if (mouse.x !== undefined && mouse.y !== undefined && mouse.isActive) {
         const nearbyPoints = spatialGrid.queryRadius(mouse.x, mouse.y, mouse.radius);
         const forceMultiplier = 1 / Math.max(1, nearbyPoints.length / 20); // Reduce force when many points
         

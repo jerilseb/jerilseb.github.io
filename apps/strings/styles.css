@@ -13,6 +13,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
+    touch-action: none; /* Prevent default touch actions like scrolling */
 }
 
 .container {
@@ -29,6 +30,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    flex-wrap: wrap; /* Allow wrapping on small screens */
     gap: 10px;
     z-index: 10;
 }
@@ -36,10 +38,20 @@ body {
 label {
     font-size: 16px;
     margin-right: 10px;
+    text-align: center; /* Center text for mobile */
+}
+
+.instruction {
+    font-size: 14px;
+    color: #aaa;
+    width: 100%;
+    text-align: center;
+    margin-top: 5px;
 }
 
 input[type="range"] {
     width: 200px;
+    max-width: 80%; /* Ensure it doesn't overflow on small screens */
     cursor: pointer;
 }
 
@@ -47,5 +59,24 @@ input[type="range"] {
     flex-grow: 1;
     width: 100%;
     background-color: #121212;
-    cursor: none;
+    cursor: pointer; /* Show pointer cursor for better UX on touch devices */
+    touch-action: none; /* Prevent default touch actions */
+}
+
+/* Mobile-specific styles */
+@media (max-width: 768px) {
+    .controls {
+        padding: 10px;
+    }
+    
+    label {
+        font-size: 14px;
+        width: 100%; /* Full width on mobile */
+        margin-right: 0;
+        margin-bottom: 5px;
+    }
+    
+    input[type="range"] {
+        width: 90%; /* Wider on mobile */
+    }
 }
