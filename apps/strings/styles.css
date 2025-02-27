@@ -1,0 +1,51 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #121212;
+    color: #f0f0f0;
+    overflow: hidden;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.controls {
+    padding: 15px;
+    background-color: rgba(30, 30, 30, 0.8);
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    z-index: 10;
+}
+
+label {
+    font-size: 16px;
+    margin-right: 10px;
+}
+
+input[type="range"] {
+    width: 200px;
+    cursor: pointer;
+}
+
+#animationCanvas {
+    flex-grow: 1;
+    width: 100%;
+    background-color: #121212;
+    cursor: none;
+}
