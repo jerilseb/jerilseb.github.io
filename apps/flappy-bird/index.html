@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <title>Flappy Bird</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -11,10 +13,11 @@
         <h1>Flappy Bird</h1>
         <div class="game-container">
             <canvas id="game-canvas" width="480" height="640"></canvas>
+            <div id="shoot-button">SHOOT</div>
             <div id="start-screen" class="screen">
                 <h2>Flappy Bird</h2>
-                <p>Click or press Space to start</p>
-                <p>Press CTRL to shoot and destroy pipes</p>
+                <p>Tap or press Space to start</p>
+                <p>Use the SHOOT button or press CTRL to destroy pipes</p>
             </div>
             <div id="game-over-screen" class="screen hidden">
                 <h2>Game Over</h2>
@@ -24,8 +27,8 @@
             </div>
         </div>
         <div class="instructions">
-            <p>Click or press Space to make the bird fly</p>
-            <p>Press CTRL to shoot and destroy pipes (cooldown: 5 seconds)</p>
+            <p>Tap screen or press Space to make the bird fly</p>
+            <p>Tap SHOOT button or press CTRL to destroy pipes (cooldown: 5 seconds)</p>
             <p>Avoid the pipes and don't hit the ground!</p>
             <p>Watch the red bar in the top-left corner to know when you can shoot again</p>
         </div>

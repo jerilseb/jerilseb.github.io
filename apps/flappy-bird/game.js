@@ -5,15 +5,21 @@ const startScreen = document.getElementById('start-screen');
 const gameOverScreen = document.getElementById('game-over-screen');
 const finalScoreElement = document.getElementById('final-score');
 const restartButton = document.getElementById('restart-button');
+const shootButton = document.getElementById('shoot-button');
+
+// Original canvas dimensions (for scaling)
+const ORIGINAL_WIDTH = 480;
+const ORIGINAL_HEIGHT = 640;
+let scaleRatio = 1; // Will be calculated based on screen size
 
 // Game settings
-const GRAVITY = 0.5;
-const FLAP_STRENGTH = -10;
-const PIPE_SPEED = 3;
+let GRAVITY = 0.5;
+let FLAP_STRENGTH = -10;
+let PIPE_SPEED = 3;
 const PIPE_SPAWN_INTERVAL = 1500; // milliseconds
-const PIPE_WIDTH = 70;
-const PIPE_GAP = 180;
-const GROUND_HEIGHT = 100;
+let PIPE_WIDTH = 70;
+let PIPE_GAP = 180;
+let GROUND_HEIGHT = 100;
 const SHOOT_COOLDOWN = 5000; // 5 seconds in milliseconds
 
 // Game state
@@ -29,6 +35,13 @@ let lastShootTime = 0;
 let shootFlashTime = 0;
 let leaderboard = [];
 const MAX_LEADERBOARD_ENTRIES = 5;
+let isMobile = false;
+
+// Check if device is mobile
+function checkMobile() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+           (window.innerWidth <= 800 && window.innerHeight <= 900);
+}
 
 // Load leaderboard from local storage
 function loadLeaderboard() {
@@ -62,14 +75,58 @@ function addScoreToLeaderboard(newScore) {
     saveLeaderboard();
 }
 
+// Calculate scale ratio based on screen size
+function calculateScaleRatio() {
+    // Get the container dimensions
+    const gameContainer = document.querySelector('.game-container');
+    const containerWidth = gameContainer.clientWidth;
+    const containerHeight = gameContainer.clientHeight;
+    
+    // Calculate scale ratio
+    const widthRatio = containerWidth / ORIGINAL_WIDTH;
+    const heightRatio = containerHeight / ORIGINAL_HEIGHT;
+    
+    // Use the smaller ratio to ensure the canvas fits within the container
+    return Math.min(widthRatio, heightRatio);
+}
+
+// Resize canvas and adjust game parameters
+function resizeCanvas() {
+    isMobile = checkMobile();
+    
+    // Calculate new scale ratio
+    scaleRatio = calculateScaleRatio();
+    
+    // Set canvas dimensions
+    canvas.width = ORIGINAL_WIDTH;
+    canvas.height = ORIGINAL_HEIGHT;
+    
+    // Scale game parameters based on screen size
+    GRAVITY = 0.5 * scaleRatio;
+    FLAP_STRENGTH = -10 * scaleRatio;
+    PIPE_SPEED = 3 * scaleRatio;
+    PIPE_WIDTH = 70 * scaleRatio;
+    PIPE_GAP = isMobile ? 200 * scaleRatio : 180 * scaleRatio; // Slightly easier on mobile
+    GROUND_HEIGHT = 100 * scaleRatio;
+    
+    // Update bird position and size if game is in progress
+    if (bird.x) {
+        bird.width = 40 * scaleRatio;
+        bird.height = 32 * scaleRatio;
+    }
+}
+
 // Initialize the game
 function init() {
+    // Resize canvas and adjust game parameters
+    resizeCanvas();
+    
     // Initialize bird
     bird = {
         x: canvas.width / 3,
         y: canvas.height / 2,
-        width: 40,
-        height: 32,
+        width: 40 * scaleRatio,
+        height: 32 * scaleRatio,
         velocity: 0,
         alive: true
     };
@@ -94,6 +151,13 @@ function init() {
     
     // Load leaderboard
     loadLeaderboard();
+    
+    // Show/hide shoot button based on game state
+    if (gameState === 'playing') {
+        shootButton.style.display = 'flex';
+    } else {
+        shootButton.style.display = 'none';
+    }
 }
 
 // Game loop
@@ -165,80 +229,80 @@ function update() {
         }
     }
     
-// Update projectiles
-for (let i = 0; i < projectiles.length; i++) {
-    const projectile = projectiles[i];
-    projectile.x += projectile.speed;
-    
-    // Check if projectile is off screen
-    if (projectile.x > canvas.width) {
-        projectiles.splice(i, 1);
-        i--;
-        continue;
-    }
-    
-    // Check for collision with pipes
-    let hitPipe = false;
-    for (let j = 0; j < pipes.length; j++) {
-        const pipe = pipes[j];
+    // Update projectiles
+    for (let i = 0; i < projectiles.length; i++) {
+        const projectile = projectiles[i];
+        projectile.x += projectile.speed;
         
-        // Check if projectile is within pipe's x-range
-        if (projectile.x + projectile.width > pipe.x && 
-            projectile.x < pipe.x + PIPE_WIDTH) {
-            
-            // Check if projectile hit the top pipe
-            if (projectile.y < pipe.topHeight) {
-                // Create explosion at the point of impact
-                createExplosion(projectile.x, pipe.topHeight);
-                
-                // Mark the top pipe as destroyed but keep its position for score tracking
-                pipe.topDestroyed = true;
-                
-                // Remove the projectile
-                projectiles.splice(i, 1);
-                i--;
-                
-                hitPipe = true;
-                break;
-            }
-            // Check if projectile hit the bottom pipe
-            else if (projectile.y + projectile.height > pipe.topHeight + PIPE_GAP) {
-                // Create explosion at the point of impact
-                createExplosion(projectile.x, pipe.topHeight + PIPE_GAP);
-                
-                // Mark the bottom pipe as destroyed but keep its position for score tracking
-                pipe.bottomDestroyed = true;
-                
-                // Remove the projectile
-                projectiles.splice(i, 1);
-                i--;
-                
-                hitPipe = true;
-                break;
-            }
-        }
-    }
-    
-    if (hitPipe) continue;
-}
-
-// Update explosions
-for (let i = 0; i < explosions.length; i++) {
-    const explosion = explosions[i];
-    
-    if (explosion.growing) {
-        explosion.radius += 2;
-        if (explosion.radius >= explosion.maxRadius) {
-            explosion.growing = false;
-        }
-    } else {
-        explosion.alpha -= 0.05;
-        if (explosion.alpha <= 0) {
-            explosions.splice(i, 1);
+        // Check if projectile is off screen
+        if (projectile.x > canvas.width) {
+            projectiles.splice(i, 1);
             i--;
+            continue;
+        }
+        
+        // Check for collision with pipes
+        let hitPipe = false;
+        for (let j = 0; j < pipes.length; j++) {
+            const pipe = pipes[j];
+            
+            // Check if projectile is within pipe's x-range
+            if (projectile.x + projectile.width > pipe.x && 
+                projectile.x < pipe.x + PIPE_WIDTH) {
+                
+                // Check if projectile hit the top pipe
+                if (projectile.y < pipe.topHeight) {
+                    // Create explosion at the point of impact
+                    createExplosion(projectile.x, pipe.topHeight);
+                    
+                    // Mark the top pipe as destroyed but keep its position for score tracking
+                    pipe.topDestroyed = true;
+                    
+                    // Remove the projectile
+                    projectiles.splice(i, 1);
+                    i--;
+                    
+                    hitPipe = true;
+                    break;
+                }
+                // Check if projectile hit the bottom pipe
+                else if (projectile.y + projectile.height > pipe.topHeight + PIPE_GAP) {
+                    // Create explosion at the point of impact
+                    createExplosion(projectile.x, pipe.topHeight + PIPE_GAP);
+                    
+                    // Mark the bottom pipe as destroyed but keep its position for score tracking
+                    pipe.bottomDestroyed = true;
+                    
+                    // Remove the projectile
+                    projectiles.splice(i, 1);
+                    i--;
+                    
+                    hitPipe = true;
+                    break;
+                }
+            }
+        }
+        
+        if (hitPipe) continue;
+    }
+
+    // Update explosions
+    for (let i = 0; i < explosions.length; i++) {
+        const explosion = explosions[i];
+        
+        if (explosion.growing) {
+            explosion.radius += 2 * scaleRatio;
+            if (explosion.radius >= explosion.maxRadius) {
+                explosion.growing = false;
+            }
+        } else {
+            explosion.alpha -= 0.05;
+            if (explosion.alpha <= 0) {
+                explosions.splice(i, 1);
+                i--;
+            }
         }
     }
-}
 }
 
 // Render game
@@ -272,7 +336,7 @@ function render() {
     
     // Draw grass
     ctx.fillStyle = '#2ecc71';
-    ctx.fillRect(0, canvas.height - GROUND_HEIGHT, canvas.width, 20);
+    ctx.fillRect(0, canvas.height - GROUND_HEIGHT, canvas.width, 20 * scaleRatio);
 
     // Draw explosions
     for (const explosion of explosions) {
@@ -291,37 +355,39 @@ function render() {
         
         // Draw projectile trail
         ctx.globalAlpha = 0.5;
-        ctx.fillRect(projectile.x - 10, projectile.y, 10, projectile.height);
+        ctx.fillRect(projectile.x - 10 * scaleRatio, projectile.y, 10 * scaleRatio, projectile.height);
         ctx.globalAlpha = 0.3;
-        ctx.fillRect(projectile.x - 20, projectile.y, 10, projectile.height);
+        ctx.fillRect(projectile.x - 20 * scaleRatio, projectile.y, 10 * scaleRatio, projectile.height);
         ctx.globalAlpha = 1;
     }
 
     // Draw bird
     if (bird.alive) {
+        const birdRadius = bird.width / 2;
+        
         // Bird body
         ctx.fillStyle = '#f1c40f';
         ctx.beginPath();
-        ctx.arc(bird.x, bird.y, bird.width / 2, 0, Math.PI * 2);
+        ctx.arc(bird.x, bird.y, birdRadius, 0, Math.PI * 2);
         ctx.fill();
         
         // Bird eye
         ctx.fillStyle = 'white';
         ctx.beginPath();
-        ctx.arc(bird.x + 10, bird.y - 7, 7, 0, Math.PI * 2);
+        ctx.arc(bird.x + 10 * scaleRatio, bird.y - 7 * scaleRatio, 7 * scaleRatio, 0, Math.PI * 2);
         ctx.fill();
         
         ctx.fillStyle = 'black';
         ctx.beginPath();
-        ctx.arc(bird.x + 12, bird.y - 7, 3, 0, Math.PI * 2);
+        ctx.arc(bird.x + 12 * scaleRatio, bird.y - 7 * scaleRatio, 3 * scaleRatio, 0, Math.PI * 2);
         ctx.fill();
         
         // Bird beak
         ctx.fillStyle = '#e74c3c';
         ctx.beginPath();
-        ctx.moveTo(bird.x + 18, bird.y);
-        ctx.lineTo(bird.x + 32, bird.y);
-        ctx.lineTo(bird.x + 18, bird.y + 8);
+        ctx.moveTo(bird.x + 18 * scaleRatio, bird.y);
+        ctx.lineTo(bird.x + 32 * scaleRatio, bird.y);
+        ctx.lineTo(bird.x + 18 * scaleRatio, bird.y + 8 * scaleRatio);
         ctx.closePath();
         ctx.fill();
         
@@ -330,7 +396,7 @@ function render() {
         if (currentTime - shootFlashTime < 200) { // Flash lasts for 200ms
             ctx.fillStyle = 'rgba(255, 255, 0, 0.7)';
             ctx.beginPath();
-            ctx.arc(bird.x + bird.width / 2 + 15, bird.y, 15, 0, Math.PI * 2);
+            ctx.arc(bird.x + birdRadius + 15 * scaleRatio, bird.y, 15 * scaleRatio, 0, Math.PI * 2);
             ctx.fill();
         }
     }
@@ -338,9 +404,9 @@ function render() {
     // Draw score
     if (gameState === 'playing' || gameState === 'gameOver') {
         ctx.fillStyle = 'white';
-        ctx.font = '32px Arial';
+        ctx.font = `${32 * scaleRatio}px Arial`;
         ctx.textAlign = 'center';
-        ctx.fillText(`Score: ${score}`, canvas.width / 2, 60);
+        ctx.fillText(`Score: ${score}`, canvas.width / 2, 60 * scaleRatio);
     }
     
     // Draw shoot cooldown bar
@@ -349,38 +415,50 @@ function render() {
         const elapsedTime = currentTime - lastShootTime;
         const cooldownProgress = Math.min(elapsedTime / SHOOT_COOLDOWN, 1);
         
+        const barWidth = 100 * scaleRatio;
+        const barHeight = 15 * scaleRatio;
+        const barX = 20 * scaleRatio;
+        const barY = 20 * scaleRatio;
+        
         // Bar background
         ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-        ctx.fillRect(20, 20, 100, 15);
+        ctx.fillRect(barX, barY, barWidth, barHeight);
         
         // Bar fill
         ctx.fillStyle = cooldownProgress >= 1 ? '#e74c3c' : '#f39c12';
-        ctx.fillRect(20, 20, 100 * cooldownProgress, 15);
+        ctx.fillRect(barX, barY, barWidth * cooldownProgress, barHeight);
         
         // Bar border
         ctx.strokeStyle = 'white';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(20, 20, 100, 15);
+        ctx.lineWidth = 2 * scaleRatio;
+        ctx.strokeRect(barX, barY, barWidth, barHeight);
         
         // Bar label
         ctx.fillStyle = 'white';
-        ctx.font = '12px Arial';
+        ctx.font = `${12 * scaleRatio}px Arial`;
         ctx.textAlign = 'left';
-        ctx.fillText('SHOOT', 20, 50);
+        ctx.fillText('SHOOT', barX, barY + 30 * scaleRatio);
         
         // Show "READY" text when cooldown is complete
         if (cooldownProgress >= 1) {
             ctx.fillStyle = '#e74c3c';
-            ctx.font = '14px Arial';
+            ctx.font = `${14 * scaleRatio}px Arial`;
             ctx.textAlign = 'center';
-            ctx.fillText('READY', 70, 33);
+            ctx.fillText('READY', barX + barWidth / 2, barY + barHeight / 2 + 5 * scaleRatio);
+        }
+        
+        // Update shoot button visibility based on cooldown
+        if (cooldownProgress >= 1) {
+            shootButton.style.opacity = '1';
+        } else {
+            shootButton.style.opacity = '0.5';
         }
     }
 }
 
 // Spawn a new pipe
 function spawnPipe() {
-    const minHeight = 50;
+    const minHeight = 50 * scaleRatio;
     const maxHeight = canvas.height - GROUND_HEIGHT - PIPE_GAP - minHeight;
     const topHeight = Math.floor(Math.random() * (maxHeight - minHeight + 1)) + minHeight;
     
@@ -422,6 +500,7 @@ function startGame() {
     gameState = 'playing';
     startScreen.classList.add('hidden');
     gameOverScreen.classList.add('hidden');
+    shootButton.style.display = 'flex';
     init();
 }
 
@@ -478,6 +557,14 @@ function gameOver() {
     
     // Show game over screen
     gameOverScreen.classList.remove('hidden');
+    
+    // Hide shoot button
+    shootButton.style.display = 'none';
+    
+    // Add vibration feedback on mobile devices
+    if (isMobile && navigator.vibrate) {
+        navigator.vibrate([100, 50, 100]);
+    }
 }
 
 // Create an explosion effect
@@ -485,8 +572,8 @@ function createExplosion(x, y) {
     explosions.push({
         x: x,
         y: y,
-        radius: 5,
-        maxRadius: 30,
+        radius: 5 * scaleRatio,
+        maxRadius: 30 * scaleRatio,
         alpha: 1,
         growing: true
     });
@@ -504,16 +591,24 @@ function shoot() {
     
     // Create a new projectile
     projectiles.push({
-        x: bird.x + bird.width / 2 + 10,
+        x: bird.x + bird.width / 2 + 10 * scaleRatio,
         y: bird.y,
-        width: 15,
-        height: 8,
-        speed: 10
+        width: 15 * scaleRatio,
+        height: 8 * scaleRatio,
+        speed: 10 * scaleRatio
     });
+    
+    // Add vibration feedback on mobile devices
+    if (isMobile && navigator.vibrate) {
+        navigator.vibrate(50);
+    }
 }
 
 // Event listeners
-document.addEventListener('click', function() {
+canvas.addEventListener('click', function(event) {
+    // Prevent default behavior
+    event.preventDefault();
+    
     if (gameState === 'start') {
         startGame();
     } else if (gameState === 'playing') {
@@ -521,8 +616,34 @@ document.addEventListener('click', function() {
     }
 });
 
+// Touch events for mobile
+canvas.addEventListener('touchstart', function(event) {
+    // Prevent default behavior (scrolling, zooming)
+    event.preventDefault();
+    
+    if (gameState === 'start') {
+        startGame();
+    } else if (gameState === 'playing') {
+        flap();
+    }
+}, { passive: false });
+
+// Shoot button event listeners
+shootButton.addEventListener('click', function(event) {
+    event.preventDefault();
+    shoot();
+});
+
+shootButton.addEventListener('touchstart', function(event) {
+    event.preventDefault();
+    shoot();
+}, { passive: false });
+
 document.addEventListener('keydown', function(event) {
     if (event.code === 'Space') {
+        // Prevent default spacebar behavior (scrolling)
+        event.preventDefault();
+        
         if (gameState === 'start') {
             startGame();
         } else if (gameState === 'playing') {
@@ -537,6 +658,16 @@ document.addEventListener('keydown', function(event) {
 
 restartButton.addEventListener('click', function() {
     startGame();
+});
+
+// Handle window resize
+window.addEventListener('resize', function() {
+    resizeCanvas();
+});
+
+// Handle device orientation change
+window.addEventListener('orientationchange', function() {
+    setTimeout(resizeCanvas, 100); // Small delay to ensure new dimensions are available
 });
 
 // Initialize and start the game loop
