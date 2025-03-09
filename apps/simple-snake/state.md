@@ -18,20 +18,22 @@ snake-game/
 ### Core Game Mechanics
 - **Snake Movement**: Controlled using W, A, S, D keys
 - **Food Generation**: Random placement of food items on the canvas
-- **Collision Detection**: Detects collisions with walls and the snake's own body
+- **Collision Detection**: Detects collisions with the snake's own body (snake passes through walls)
 - **Scoring System**: Score increases by 10 points when food is eaten
 - **Game Loop**: Implemented using setInterval for continuous updates
-
+- **Timer System**: 60-second countdown timer that ends the game when it expires
 ### User Interface
 - **Pre-game Player Name Input**: Allows players to enter their name before starting
 - **Game Canvas**: 400x400 pixel canvas with a 20x20 grid (each cell is 20x20 pixels)
 - **Score Display**: Shows current score during gameplay
+- **Timer Display**: Shows remaining time in seconds during gameplay
 - **Game Controls**: Instructions displayed for player reference
+- **Restart Button**: Allows players to restart the game after game over
 - **Restart Button**: Allows players to restart the game after game over
 
 ### Data Persistence
 - **Player Name Storage**: Stores player name in local storage
-- **Global Leaderboard System**: Maintains a list of top 10 scores with player names in Supabase database
+- **Global Leaderboard System**: Maintains a list of top 20 scores with player names in Supabase database
 - **Score Filtering**: Scores of 0 are not saved to the leaderboard
 - **Error Handling**: Displays appropriate error messages if Supabase operations fail
 
@@ -66,16 +68,19 @@ The styling follows a clean, modern design with:
 
 #### Constants and Variables
 - Grid size and dimensions (20x20 cells, each 20px)
-- Game speed (150ms between updates)
+- Game speed (100ms between updates)
 - Game state variables (snake array, food position, direction, score)
+- Timer variables (timeRemaining set to 60 seconds, timerInterval)
 
 #### Core Functions
-1. **initializeGame()**: Sets up initial game state (snake position, direction, score)
+1. **initializeGame()**: Sets up initial game state (snake position, direction, score, timer)
 2. **gameLoop()**: Main game loop that calls update() and draw()
 3. **update()**: Updates game state (snake movement, collision detection, food consumption)
 4. **draw()**: Renders the game state to the canvas
 5. **generateFood()**: Creates food at random positions (avoiding snake)
-6. **checkCollision()**: Detects collisions with walls or snake body
+6. **checkCollision()**: Detects collisions with the snake's own body
+7. **updateTimer()**: Decrements and updates the timer display every second
+8. **gameOver()**: Handles game end conditions (collision or timer expiration)
 
 #### Event Handling
 - **handleKeyPress()**: Captures W, A, S, D key presses for snake movement
@@ -91,7 +96,7 @@ The styling follows a clean, modern design with:
 #### Supabase Integration
 - **initSupabase()**: Initializes the Supabase client with URL and anon key
 - **saveScoreToSupabase()**: Saves a player's score to the Supabase leaderboard table
-- **getLeaderboardFromSupabase()**: Retrieves the top 10 scores from Supabase
+- **getLeaderboardFromSupabase()**: Retrieves the top 20 scores from Supabase
 
 ## Supabase Integration
 
@@ -113,27 +118,19 @@ The styling follows a clean, modern design with:
 
 ## Known Behaviors
 - The snake moves at a constant speed regardless of score
-- The game ends immediately upon collision with walls or self
+- The game ends upon collision with the snake's own body or when the 60-second timer expires
+- The snake passes through walls and appears on the opposite side
 - The leaderboard is hidden during gameplay and shown after game over
 - Scores of 0 are not recorded in the leaderboard
 - The snake cannot reverse direction (e.g., cannot go right when moving left)
 - If Supabase operations fail, appropriate error messages are displayed
-
-## Potential Future Enhancements
-- Difficulty levels with different speeds
-- Mobile touch controls
-- Visual effects for food consumption or game over
-- Sound effects
-- Different types of food with special effects
-- Obstacles or maze elements
-- Multiplayer functionality
-- Real-time leaderboard updates using Supabase's real-time subscriptions
-- User authentication for secure player identification
+- The game has a 60-second time limit for players to accumulate points
 
 ## Technical Implementation Notes
 - The game uses a grid-based system where each cell is 20x20 pixels
 - The snake is represented as an array of objects with x,y coordinates
-- The game loop runs at a fixed interval of 150ms
+- The game loop runs at a fixed interval of 100ms
+- The timer updates at a fixed interval of 1000ms (1 second)
 - Local storage is used for player name persistence
 - Supabase is used exclusively for the global leaderboard system
 - CSS classes control the visibility of different UI sections

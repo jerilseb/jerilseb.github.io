@@ -44,7 +44,7 @@ async function getLeaderboardFromSupabase() {
             .from('snake_leaderboard')
             .select('*')
             .order('score', { ascending: false })
-            .limit(10);
+            .limit(20);
             
         if (error) {
             console.error('Error fetching leaderboard from Supabase:', error);

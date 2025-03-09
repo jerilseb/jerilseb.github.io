@@ -5,7 +5,7 @@ import { initSupabase, saveScoreToSupabase, getLeaderboardFromSupabase } from '.
 const GRID_SIZE = 20; // Size of each grid cell in pixels
 const GRID_WIDTH = 20; // Number of cells horizontally
 const GRID_HEIGHT = 20; // Number of cells vertically
-const GAME_SPEED = 150; // Milliseconds between game updates
+const GAME_SPEED = 100; // Milliseconds between game updates
 
 // Game Variables
 let canvas, ctx;
@@ -15,8 +15,10 @@ let direction = 'right';
 let nextDirection = 'right';
 let score = 0;
 let gameInterval;
+let timerInterval;
 let gameActive = false;
 let playerName = '';
+let timeRemaining = 60; // 60 seconds timer
 
 // DOM Elements
 const playerForm = document.getElementById('player-form');
@@ -26,6 +28,7 @@ const startGameButton = document.getElementById('start-game');
 const restartGameButton = document.getElementById('restart-game');
 const currentPlayerDisplay = document.getElementById('current-player');
 const currentScoreDisplay = document.getElementById('current-score');
+const timeRemainingDisplay = document.getElementById('time-remaining');
 const leaderboard = document.getElementById('leaderboard');
 const leaderboardBody = document.getElementById('leaderboard-body');
 
@@ -75,6 +78,7 @@ function startGame() {
     // Update display
     currentPlayerDisplay.textContent = playerName;
     currentScoreDisplay.textContent = '0';
+    timeRemainingDisplay.textContent = timeRemaining;
     
     // Show game container, hide form and leaderboard
     playerForm.classList.add('hidden');
@@ -87,6 +91,22 @@ function startGame() {
     // Start game loop
     gameActive = true;
     gameInterval = setInterval(gameLoop, GAME_SPEED);
+    
+    // Start timer
+    timerInterval = setInterval(updateTimer, 1000);
+}
+
+// Update the timer
+function updateTimer() {
+    if (!gameActive) return;
+    
+    timeRemaining--;
+    timeRemainingDisplay.textContent = timeRemaining;
+    
+    // Check if time is up
+    if (timeRemaining <= 0) {
+        gameOver('Time\'s up!');
+    }
 }
 
 // Initialize game state
@@ -94,6 +114,10 @@ function initializeGame() {
     // Reset score
     score = 0;
     currentScoreDisplay.textContent = '0';
+    
+    // Reset timer
+    timeRemaining = 60;
+    timeRemainingDisplay.textContent = timeRemaining;
     
     // Initialize snake at center
     const centerX = Math.floor(GRID_WIDTH / 2);
@@ -144,7 +168,20 @@ function update() {
             break;
     }
     
-    // Check for collisions
+    // Wrap around when passing through walls
+    if (head.x < 0) {
+        head.x = GRID_WIDTH - 1;
+    } else if (head.x >= GRID_WIDTH) {
+        head.x = 0;
+    }
+    
+    if (head.y < 0) {
+        head.y = GRID_HEIGHT - 1;
+    } else if (head.y >= GRID_HEIGHT) {
+        head.y = 0;
+    }
+    
+    // Check for collisions (only with self now)
     if (checkCollision(head)) {
         gameOver();
         return;
@@ -233,18 +270,8 @@ function generateFood() {
     food = position;
 }
 
-// Check for collisions with walls or self
+// Check for collisions with self only (wall collisions are handled by wrapping)
 function checkCollision(head) {
-    // Wall collision
-    if (
-        head.x < 0 ||
-        head.y < 0 ||
-        head.x >= GRID_WIDTH ||
-        head.y >= GRID_HEIGHT
-    ) {
-        return true;
-    }
-    
     // Self collision (check if head collides with any segment)
     return snake.some((segment, index) => {
         // Skip checking against the head itself
@@ -279,9 +306,10 @@ function handleKeyPress(event) {
 }
 
 // Game over
-async function gameOver() {
-    // Stop game loop
+async function gameOver(message = 'Game Over!') {
+    // Stop game loop and timer
     clearInterval(gameInterval);
+    clearInterval(timerInterval);
     gameActive = false;
     
     // Save score to leaderboard
@@ -294,7 +322,7 @@ async function gameOver() {
     leaderboard.classList.remove('hidden');
     
     // Show game over message
-    alert(`Game Over! Your score: ${score}`);
+    alert(`${message} Your score: ${score}`);
 }
 
 // Restart game
@@ -302,6 +330,7 @@ async function restartGame() {
     // Stop current game if active
     if (gameActive) {
         clearInterval(gameInterval);
+        clearInterval(timerInterval);
     }
     
     // Hide leaderboard
@@ -311,6 +340,7 @@ async function restartGame() {
     initializeGame();
     gameActive = true;
     gameInterval = setInterval(gameLoop, GAME_SPEED);
+    timerInterval = setInterval(updateTimer, 1000);
 }
 
 // Save score to leaderboard in Supabase
