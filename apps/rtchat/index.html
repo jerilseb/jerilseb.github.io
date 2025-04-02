@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebRTC P2P Chat (Manual Signaling)</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px; /* Reduced padding */
+            background-color: #f4f4f4;
+            height: 100vh; /* Use full viewport height */
+            box-sizing: border-box;
+            margin: 0;
+        }
+        .container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            width: 95%;
+            max-width: 700px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1; /* Allow container to grow */
+            max-height: calc(100vh - 40px); /* Limit height */
+        }
+        h1, h2 {
+            text-align: center;
+            color: #333;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        textarea {
+            width: 95%;
+            min-height: 80px; /* Reduced height */
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9em;
+            resize: vertical; /* Allow vertical resize */
+        }
+        button {
+            padding: 10px 15px;
+            margin: 5px 5px 15px 0;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.2s ease;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        button:hover:not(:disabled) {
+            background-color: #0056b3;
+        }
+        #chatLog {
+            flex-grow: 1; /* Allow chat log to take available space */
+            border: 1px solid #ccc;
+            background-color: #f9f9f9; /* Lighter background */
+            overflow-y: auto; /* Changed to auto */
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column; /* Stack messages vertically */
+        }
+        #messageInput {
+            flex-grow: 1; /* Input takes remaining space */
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-right: 5px;
+            font-size: 1em;
+        }
+        #sendButton {
+            flex-shrink: 0; /* Prevent button from shrinking */
+        }
+        .chat-input-area {
+            display: flex;
+            align-items: center;
+            margin-top: 10px; /* Add some space above input */
+        }
+        .section {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+        }
+        .section:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+         }
+         #chatSection { /* Style the chat section specifically */
+             flex-grow: 1;
+             display: flex;
+             flex-direction: column;
+         }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        #status {
+            margin-top: 10px;
+            padding: 8px;
+            background-color: #f0f0f0;
+            border: 1px dashed #aaa;
+            border-radius: 4px;
+            font-size: 0.85em;
+            color: #333;
+            text-align: center;
+        }
+
+        /* Chat Bubble Styles */
+        .message {
+            margin-bottom: 10px;
+            max-width: 75%; /* Limit message width */
+            padding: 8px 12px;
+            border-radius: 15px;
+            word-wrap: break-word;
+            display: flex; /* Use flex for potential sender line */
+            flex-direction: column;
+            line-height: 1.3;
+        }
+        .message-me {
+            background-color: #dcf8c6; /* Light green for self */
+            align-self: flex-end; /* Align right */
+            border-bottom-right-radius: 5px; /* Give it a tail */
+            margin-left: auto; /* Push to right */
+        }
+        .message-peer {
+            background-color: #eee; /* Light grey for peer */
+            align-self: flex-start; /* Align left */
+            border-bottom-left-radius: 5px; /* Give it a tail */
+            margin-right: auto; /* Push to left */
+        }
+         .message-system {
+            background-color: #fffadd; /* Light yellow for system */
+            align-self: center; /* Center system messages */
+            font-style: italic;
+            font-size: 0.9em;
+            color: #555;
+            max-width: 90%;
+            text-align: center;
+         }
+
+        /* Optional: Add sender name styling if needed */
+        /* .message-sender {
+            font-weight: bold;
+            margin-bottom: 3px;
+            font-size: 0.8em;
+            color: #555;
+        } */
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>WebRTC P2P Chat</h1>
+
+        <!-- Signaling Section -->
+        <div class="section" id="signalingSection">
+            <h2>Signaling</h2>
+            <p style="font-size: 0.9em; margin-bottom: 15px;"><strong>Instructions:</strong>
+                <br>1. <strong>Peer 1:</strong> Click "Create Offer", copy text from "Offer / Answer to Copy".
+                <br>2. <strong>Peer 2:</strong> Paste offer into "Paste Received...", click "Submit Offer / Create Answer", copy *new* text from "Offer / Answer to Copy".
+                <br>3. <strong>Peer 1:</strong> Paste answer from Peer 2 into "Paste Received...", click "Submit Answer".
+                <br>4. Once connected, this section will hide & chat will enable.
+            </p>
+
+            <button id="createOfferButton">1. Create Offer</button>
+            <button id="createAnswerButton">2. Submit Offer / Create Answer</button>
+            <button id="addAnswerButton">3. Submit Answer</button>
+
+            <div>
+                <label for="offerAnswerToCopy">Offer / Answer to Copy:</label>
+                <textarea id="offerAnswerToCopy" readonly placeholder="Offer or Answer SDP will appear here..."></textarea>
+            </div>
+            <div>
+                <label for="receivedOfferAnswer">Paste Received Offer / Answer Here:</label>
+                <textarea id="receivedOfferAnswer" placeholder="Paste Offer or Answer SDP from peer here..."></textarea>
+            </div>
+        </div>
+
+        <!-- Chat Section -->
+        <div class="section" id="chatSection">
+            <h2>Chat</h2>
+            <div id="chatLog"></div>
+            <div class="chat-input-area">
+                <input type="text" id="messageInput" placeholder="Type message..." disabled>
+                <button id="sendButton" disabled>Send</button>
+            </div>
+        </div>
+
+         <!-- Status Section -->
+         <div class="section">
+             <h2>Status</h2>
+             <div id="status">Not Connected</div>
+         </div>
+    </div>
+
+    <script>
+        // --- Configuration ---
+        const configuration = {
+            iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+        };
+
+        // --- HTML Elements ---
+        const signalingSection = document.getElementById('signalingSection'); // Added
+        const createOfferButton = document.getElementById('createOfferButton');
+        const createAnswerButton = document.getElementById('createAnswerButton');
+        const addAnswerButton = document.getElementById('addAnswerButton');
+        const offerAnswerToCopy = document.getElementById('offerAnswerToCopy');
+        const receivedOfferAnswer = document.getElementById('receivedOfferAnswer');
+        const chatLog = document.getElementById('chatLog');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const statusDiv = document.getElementById('status');
+
+        // --- WebRTC Variables ---
+        let peerConnection = null;
+        let dataChannel = null;
+        let isInitiator = false;
+
+        // --- Logging Function ---
+        function log(message) {
+            console.log(message);
+            statusDiv.textContent = message;
+        }
+
+        // Updated logChat for styling
+        function logChat(sender, message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message');
+
+            let senderClass = '';
+            if (sender === 'Me') {
+                senderClass = 'message-me';
+            } else if (sender === 'Peer') {
+                senderClass = 'message-peer';
+            } else { // System messages
+                senderClass = 'message-system';
+            }
+            messageDiv.classList.add(senderClass);
+
+            // Removed explicit sender prefix, rely on styling
+            messageDiv.textContent = message;
+
+            /* // Optional: Add sender prefix element if desired
+            if (sender === 'Me' || sender === 'Peer') {
+                const senderSpan = document.createElement('span');
+                senderSpan.classList.add('message-sender');
+                senderSpan.textContent = sender + ':';
+                messageDiv.appendChild(senderSpan);
+            }
+            const contentSpan = document.createElement('span');
+            contentSpan.textContent = message;
+            messageDiv.appendChild(contentSpan);
+            */
+
+            chatLog.appendChild(messageDiv);
+            // Scroll to bottom smoothly
+            chatLog.scrollTo({ top: chatLog.scrollHeight, behavior: 'smooth' });
+        }
+
+
+        // --- Initialization ---
+        function initializePeerConnection() {
+            log("Initializing Peer Connection...");
+            if (peerConnection) { // Clean up existing connection if any
+                log("Cleaning up previous connection instance.");
+                peerConnection.close();
+            }
+            peerConnection = new RTCPeerConnection(configuration);
+
+            // --- Event Handlers for RTCPeerConnection ---
+            peerConnection.onicecandidate = event => {
+                if (!event.candidate) {
+                    log("ICE Candidate gathering complete.");
+                    // Display the final SDP (offer or answer) including all candidates
+                    try {
+                        offerAnswerToCopy.value = JSON.stringify(peerConnection.localDescription);
+                        log(`Local description (with candidates) ready to be copied.`);
+                    } catch (e) {
+                         log("Error stringifying local description: " + e);
+                    }
+                } else {
+                     log("ICE Candidate generated. Gathering...");
+                }
+            };
+
+            peerConnection.onconnectionstatechange = event => {
+                log(`Connection State: ${peerConnection.connectionState}`);
+                if (peerConnection.connectionState === 'connected') {
+                    log("Peers connected!");
+                    // UI updates are now handled by data channel 'open'
+                } else if (peerConnection.connectionState === 'failed') {
+                    log("Connection failed.");
+                    resetConnection();
+                } else if (peerConnection.connectionState === 'disconnected' || peerConnection.connectionState === 'closed') {
+                    log("Connection closed or disconnected.");
+                    resetConnection();
+                }
+            };
+
+            peerConnection.oniceconnectionstatechange = event => {
+                 log(`ICE Connection State: ${peerConnection.iceConnectionState}`);
+                 if (peerConnection.iceConnectionState === 'failed' ||
+                     peerConnection.iceConnectionState === 'disconnected' ||
+                     peerConnection.iceConnectionState === 'closed') {
+                     // Sometimes connectionstatechange is slow, handle here too
+                     resetConnection();
+                 }
+            };
+
+            peerConnection.ondatachannel = event => {
+                log("Data channel received!");
+                dataChannel = event.channel;
+                setupDataChannelEvents();
+            };
+
+             log("Peer Connection Initialized.");
+        }
+
+        // --- Data Channel Setup ---
+        function setupDataChannelEvents() {
+            if (!dataChannel) {
+                log("Error: Data channel is null in setupDataChannelEvents.");
+                return;
+            }
+             log("Setting up data channel event listeners...");
+
+            dataChannel.onopen = () => {
+                log("Data channel open!");
+                logChat("System", "Chat connection established!");
+                messageInput.disabled = false;
+                sendButton.disabled = false;
+                messageInput.focus();
+                // Hide signaling section on successful connection
+                signalingSection.style.display = 'none'; // <<< HIDE UI
+            };
+
+            dataChannel.onclose = () => {
+                log("Data channel closed!");
+                logChat("System", "Chat connection closed.");
+                // Don't necessarily reset the entire UI here,
+                // the connection state change handler will call resetConnection
+            };
+
+            dataChannel.onerror = error => {
+                log(`Data channel error: ${error}`);
+                console.error("Data channel error:", error);
+                 logChat("System", `Error: ${error.message || 'Unknown data channel error'}`);
+                // Consider resetting connection on error
+                // resetConnection(); // Uncomment if desired
+            };
+
+            dataChannel.onmessage = event => {
+                log(`Message received: ${event.data}`);
+                try {
+                    // Basic safety check - could implement JSON parsing if sending structured data
+                    const messageText = String(event.data);
+                     logChat("Peer", messageText);
+                } catch(e) {
+                    console.error("Error processing received message:", e);
+                     logChat("System", "Received unreadable message.");
+                }
+            };
+        }
+
+        // --- Signaling Logic ---
+
+        // Peer 1: Create Offer
+        createOfferButton.onclick = async () => {
+            log("Creating Offer...");
+            resetConnection(false); // Soft reset (don't clear chat) before creating offer
+            isInitiator = true;
+            initializePeerConnection();
+
+            dataChannel = peerConnection.createDataChannel("chatChannel");
+            log("Data channel created by initiator.");
+            setupDataChannelEvents();
+
+            try {
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+                log("Offer created and set as local description. Waiting for ICE gathering...");
+                // onicecandidate handler populates textarea when complete
+                createOfferButton.disabled = true;
+                createAnswerButton.disabled = true;
+                addAnswerButton.disabled = false;
+            } catch (error) {
+                log(`Error creating offer: ${error}`);
+                console.error("Offer creation error:", error);
+                resetConnection();
+            }
+        };
+
+        // Peer 2: Receive Offer, Create Answer
+        createAnswerButton.onclick = async () => {
+             const offerData = receivedOfferAnswer.value.trim();
+             if (!offerData) {
+                 alert("Please paste the received Offer first!");
+                 return;
+             }
+
+            log("Processing received Offer and creating Answer...");
+             resetConnection(false); // Soft reset before processing offer
+            isInitiator = false;
+            initializePeerConnection();
+
+             try {
+                const offer = JSON.parse(offerData);
+                log("Received offer parsed.");
+
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+                log("Remote description (offer) set successfully.");
+
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+                log("Answer created and set as local description. Waiting for ICE gathering...");
+                // onicecandidate handler populates textarea when complete
+
+                createOfferButton.disabled = true;
+                createAnswerButton.disabled = true;
+                addAnswerButton.disabled = true;
+                receivedOfferAnswer.value = '';
+            } catch (error) {
+                log(`Error processing offer or creating answer: ${error}`);
+                console.error("Answer creation error:", error);
+                resetConnection();
+            }
+        };
+
+        // Peer 1: Receive Answer
+        addAnswerButton.onclick = async () => {
+            const answerData = receivedOfferAnswer.value.trim();
+             if (!answerData) {
+                 alert("Please paste the received Answer first!");
+                 return;
+             }
+             if (!peerConnection || !peerConnection.localDescription) {
+                  alert("Invalid state. Create an offer first.");
+                  log("Cannot add answer: No local description set (Offer likely not created or set).");
+                  return;
+             }
+             if (peerConnection.signalingState !== 'have-local-offer') {
+                 alert("Invalid state: " + peerConnection.signalingState + ". Expected 'have-local-offer'.");
+                 log("Cannot add answer: Invalid signaling state: " + peerConnection.signalingState);
+                 return;
+             }
+
+            log("Processing received Answer...");
+
+            try {
+                const answer = JSON.parse(answerData);
+                 log("Received answer parsed.");
+
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+                log("Remote description (answer) set successfully. Connection establishing...");
+
+                addAnswerButton.disabled = true;
+                 receivedOfferAnswer.value = '';
+            } catch (error) {
+                log(`Error processing answer: ${error}`);
+                console.error("Answer processing error:", error);
+                resetConnection();
+            }
+        };
+
+
+        // --- Chat Message Sending ---
+        sendButton.onclick = () => {
+            const message = messageInput.value.trim();
+            if (message && dataChannel && dataChannel.readyState === 'open') {
+                try {
+                    dataChannel.send(message);
+                    log(`Message sent: ${message}`);
+                    logChat("Me", message); // Use updated logChat
+                    messageInput.value = '';
+                    messageInput.focus();
+                } catch (error) {
+                    log(`Error sending message: ${error}`);
+                    console.error("Send error:", error);
+                    logChat("System", "Error sending message."); // Inform user in chat
+                }
+            } else if (!message) {
+                // Do nothing if message is empty
+            }
+            else {
+                 log("Cannot send message, data channel is not open or ready.");
+                 logChat("System", "Cannot send message: Connection not ready."); // Inform user in chat
+            }
+        };
+
+        // Allow sending message with Enter key
+         messageInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter' && !e.shiftKey && !sendButton.disabled) { // Send on Enter, allow Shift+Enter for newline (though input is single line)
+                sendButton.click(); // Trigger send button click
+                e.preventDefault(); // Prevent default form submission/newline
+            }
+        });
+
+
+        // --- Cleanup / Reset ---
+        function resetConnection(clearChatLog = true) { // Added flag to optionally preserve chat
+            log("Resetting connection state...");
+            if (dataChannel) {
+                dataChannel.close(); // Attempt to close nicely
+                dataChannel = null; // Nullify reference
+            }
+            if (peerConnection) {
+                peerConnection.close(); // Close the connection
+                peerConnection = null; // Nullify reference
+            }
+            // Reset UI elements
+            offerAnswerToCopy.value = '';
+            receivedOfferAnswer.value = '';
+            messageInput.disabled = true;
+            sendButton.disabled = true;
+            createOfferButton.disabled = false;
+            createAnswerButton.disabled = false;
+            addAnswerButton.disabled = false; // Might need adjustment based on state
+            isInitiator = false;
+
+            if(clearChatLog) {
+                 chatLog.innerHTML = ''; // Clear chat log only on full reset
+            }
+
+            signalingSection.style.display = 'block'; // <<< SHOW UI
+
+            log("Ready for new connection attempt.");
+        }
+
+        // Initial state log
+         log("Page loaded. Ready to start signaling.");
+
+    </script>
+
+</body>
+</html>
