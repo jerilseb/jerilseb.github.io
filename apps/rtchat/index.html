@@ -3,16 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebRTC P2P Chat (Manual Signaling)</title>
+    <title>WebRTC P2P Chat (QR Code Signaling)</title>
+    <!-- QR Code Generation Library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <!-- QR Code Scanning Library -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
     <style>
         body {
             font-family: sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 10px; /* Reduced padding */
+            padding: 10px;
             background-color: #f4f4f4;
-            height: 100vh; /* Use full viewport height */
+            height: 100vh;
             box-sizing: border-box;
             margin: 0;
         }
@@ -26,8 +31,9 @@
             margin-bottom: 20px;
             display: flex;
             flex-direction: column;
-            flex-grow: 1; /* Allow container to grow */
-            max-height: calc(100vh - 40px); /* Limit height */
+            flex-grow: 1;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto; /* Allow container scroll if needed */
         }
         h1, h2 {
             text-align: center;
@@ -35,20 +41,9 @@
             margin-top: 0;
             margin-bottom: 15px;
         }
-        textarea {
-            width: 95%;
-            min-height: 80px; /* Reduced height */
-            margin-bottom: 10px;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-family: monospace;
-            font-size: 0.9em;
-            resize: vertical; /* Allow vertical resize */
-        }
         button {
             padding: 10px 15px;
-            margin: 5px 5px 15px 0;
+            margin: 8px 5px 15px 0; /* Adjusted margin */
             border: none;
             background-color: #007bff;
             color: white;
@@ -65,18 +60,19 @@
             background-color: #0056b3;
         }
         #chatLog {
-            flex-grow: 1; /* Allow chat log to take available space */
+            flex-grow: 1;
             border: 1px solid #ccc;
-            background-color: #f9f9f9; /* Lighter background */
-            overflow-y: auto; /* Changed to auto */
+            background-color: #f9f9f9;
+            overflow-y: auto;
             margin-bottom: 10px;
             padding: 10px;
             border-radius: 4px;
             display: flex;
-            flex-direction: column; /* Stack messages vertically */
+            flex-direction: column;
+            min-height: 150px; /* Ensure minimum height */
         }
         #messageInput {
-            flex-grow: 1; /* Input takes remaining space */
+            flex-grow: 1;
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 4px;
@@ -84,12 +80,12 @@
             font-size: 1em;
         }
         #sendButton {
-            flex-shrink: 0; /* Prevent button from shrinking */
+            flex-shrink: 0;
         }
         .chat-input-area {
             display: flex;
             align-items: center;
-            margin-top: 10px; /* Add some space above input */
+            margin-top: 10px;
         }
         .section {
             margin-bottom: 20px;
@@ -100,7 +96,7 @@
             border-bottom: none;
             padding-bottom: 0;
          }
-         #chatSection { /* Style the chat section specifically */
+         #chatSection {
              flex-grow: 1;
              display: flex;
              flex-direction: column;
@@ -122,75 +118,87 @@
             text-align: center;
         }
 
-        /* Chat Bubble Styles */
-        .message {
-            margin-bottom: 10px;
-            max-width: 75%; /* Limit message width */
-            padding: 8px 12px;
-            border-radius: 15px;
-            word-wrap: break-word;
-            display: flex; /* Use flex for potential sender line */
+        /* --- QR Code Specific Styles --- */
+        .qr-code-container {
+            display: flex;
             flex-direction: column;
-            line-height: 1.3;
-        }
-        .message-me {
-            background-color: #dcf8c6; /* Light green for self */
-            align-self: flex-end; /* Align right */
-            border-bottom-right-radius: 5px; /* Give it a tail */
-            margin-left: auto; /* Push to right */
-        }
-        .message-peer {
-            background-color: #eee; /* Light grey for peer */
-            align-self: flex-start; /* Align left */
-            border-bottom-left-radius: 5px; /* Give it a tail */
-            margin-right: auto; /* Push to left */
-        }
-         .message-system {
-            background-color: #fffadd; /* Light yellow for system */
-            align-self: center; /* Center system messages */
-            font-style: italic;
-            font-size: 0.9em;
-            color: #555;
-            max-width: 90%;
+            align-items: center;
+            margin: 15px 0;
+            padding: 10px;
+            border: 1px dashed #ccc;
+            background-color: #f9f9f9;
+            min-height: 150px; /* Placeholder height */
+            justify-content: center; /* Center content vertically */
             text-align: center;
+        }
+        .qr-code-container canvas,
+        .qr-code-container img { /* qrcode.js generates canvas or img */
+            max-width: 90%;
+            height: auto;
+            margin-top: 10px;
+        }
+        #qrReader {
+            width: 100%;
+            max-width: 400px; /* Adjust as needed */
+            margin: 15px auto;
+            border: 1px solid #ccc;
+            background-color: #000; /* Background while camera loads */
+        }
+        #qrReader button { /* Style the stop button if needed */
+             margin-top: 5px;
+        }
+         .hidden {
+             display: none;
          }
 
-        /* Optional: Add sender name styling if needed */
-        /* .message-sender {
-            font-weight: bold;
-            margin-bottom: 3px;
-            font-size: 0.8em;
-            color: #555;
-        } */
+        /* Chat Bubble Styles (from previous step) */
+        .message { margin-bottom: 10px; max-width: 75%; padding: 8px 12px; border-radius: 15px; word-wrap: break-word; display: flex; flex-direction: column; line-height: 1.3; }
+        .message-me { background-color: #dcf8c6; align-self: flex-end; border-bottom-right-radius: 5px; margin-left: auto; }
+        .message-peer { background-color: #eee; align-self: flex-start; border-bottom-left-radius: 5px; margin-right: auto; }
+        .message-system { background-color: #fffadd; align-self: center; font-style: italic; font-size: 0.9em; color: #555; max-width: 90%; text-align: center; }
 
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>WebRTC P2P Chat</h1>
+        <h1>WebRTC P2P Chat (QR Code)</h1>
 
         <!-- Signaling Section -->
         <div class="section" id="signalingSection">
             <h2>Signaling</h2>
             <p style="font-size: 0.9em; margin-bottom: 15px;"><strong>Instructions:</strong>
-                <br>1. <strong>Peer 1:</strong> Click "Create Offer", copy text from "Offer / Answer to Copy".
-                <br>2. <strong>Peer 2:</strong> Paste offer into "Paste Received...", click "Submit Offer / Create Answer", copy *new* text from "Offer / Answer to Copy".
-                <br>3. <strong>Peer 1:</strong> Paste answer from Peer 2 into "Paste Received...", click "Submit Answer".
-                <br>4. Once connected, this section will hide & chat will enable.
+                <br>1. <strong>Peer 1:</strong> Click "Create Offer & Show QR".
+                <br>2. <strong>Peer 2:</strong> Click "Scan Offer QR". Scan Peer 1's QR code. Your Answer QR will appear.
+                <br>3. <strong>Peer 1:</strong> Click "Scan Answer QR". Scan Peer 2's QR code.
+                <br>4. Connection should establish. Signaling section will hide.
             </p>
 
-            <button id="createOfferButton">1. Create Offer</button>
-            <button id="createAnswerButton">2. Submit Offer / Create Answer</button>
-            <button id="addAnswerButton">3. Submit Answer</button>
-
+            <!-- Buttons -->
             <div>
-                <label for="offerAnswerToCopy">Offer / Answer to Copy:</label>
-                <textarea id="offerAnswerToCopy" readonly placeholder="Offer or Answer SDP will appear here..."></textarea>
+                <button id="createOfferButton">1. Create Offer & Show QR</button>
+                <button id="scanOfferButton">2. Scan Offer QR</button>
+                <button id="scanAnswerButton" disabled>3. Scan Answer QR</button>
             </div>
-            <div>
-                <label for="receivedOfferAnswer">Paste Received Offer / Answer Here:</label>
-                <textarea id="receivedOfferAnswer" placeholder="Paste Offer or Answer SDP from peer here..."></textarea>
+
+             <!-- QR Code Reader Area -->
+            <div id="qrReaderContainer" class="hidden">
+                 <label>QR Code Scanner:</label>
+                 <div id="qrReader"></div>
+                 <button id="stopScanButton">Stop Scanning</button>
+             </div>
+
+
+            <!-- Offer QR Code Display Area -->
+            <div id="offerQrCodeContainer" class="qr-code-container hidden">
+                <label>Offer QR Code (Scan this on Peer 2):</label>
+                <div id="offerQrCodePlaceholder">Generating...</div>
+            </div>
+
+            <!-- Answer QR Code Display Area -->
+            <div id="answerQrCodeContainer" class="qr-code-container hidden">
+                <label>Answer QR Code (Scan this on Peer 1):</label>
+                <div id="answerQrCodePlaceholder">Waiting for Offer scan...</div>
             </div>
         </div>
 
@@ -215,84 +223,212 @@
         // --- Configuration ---
         const configuration = {
             iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+            // iceTransportPolicy: 'relay' // Force TURN if STUN fails often, requires TURN server config
         };
 
         // --- HTML Elements ---
-        const signalingSection = document.getElementById('signalingSection'); // Added
+        const signalingSection = document.getElementById('signalingSection');
         const createOfferButton = document.getElementById('createOfferButton');
-        const createAnswerButton = document.getElementById('createAnswerButton');
-        const addAnswerButton = document.getElementById('addAnswerButton');
-        const offerAnswerToCopy = document.getElementById('offerAnswerToCopy');
-        const receivedOfferAnswer = document.getElementById('receivedOfferAnswer');
+        const scanOfferButton = document.getElementById('scanOfferButton');
+        const scanAnswerButton = document.getElementById('scanAnswerButton');
+        const qrReaderContainer = document.getElementById('qrReaderContainer');
+        const qrReader = document.getElementById('qrReader');
+        const stopScanButton = document.getElementById('stopScanButton');
+        const offerQrCodeContainer = document.getElementById('offerQrCodeContainer');
+        const offerQrCodePlaceholder = document.getElementById('offerQrCodePlaceholder');
+        const answerQrCodeContainer = document.getElementById('answerQrCodeContainer');
+        const answerQrCodePlaceholder = document.getElementById('answerQrCodePlaceholder');
+
+        const chatSection = document.getElementById('chatSection'); // Ensure this exists if used
         const chatLog = document.getElementById('chatLog');
         const messageInput = document.getElementById('messageInput');
         const sendButton = document.getElementById('sendButton');
         const statusDiv = document.getElementById('status');
 
-        // --- WebRTC Variables ---
+        // --- WebRTC & State Variables ---
         let peerConnection = null;
         let dataChannel = null;
         let isInitiator = false;
+        let html5QrCodeScanner = null; // Scanner instance
 
-        // --- Logging Function ---
+        // --- Logging Functions ---
         function log(message) {
             console.log(message);
             statusDiv.textContent = message;
         }
 
-        // Updated logChat for styling
-        function logChat(sender, message) {
-            const messageDiv = document.createElement('div');
+        function logChat(sender, message) { /* ... (same as previous) ... */
+             const messageDiv = document.createElement('div');
             messageDiv.classList.add('message');
-
             let senderClass = '';
-            if (sender === 'Me') {
-                senderClass = 'message-me';
-            } else if (sender === 'Peer') {
-                senderClass = 'message-peer';
-            } else { // System messages
-                senderClass = 'message-system';
-            }
+            if (sender === 'Me') senderClass = 'message-me';
+            else if (sender === 'Peer') senderClass = 'message-peer';
+            else senderClass = 'message-system';
             messageDiv.classList.add(senderClass);
-
-            // Removed explicit sender prefix, rely on styling
             messageDiv.textContent = message;
-
-            /* // Optional: Add sender prefix element if desired
-            if (sender === 'Me' || sender === 'Peer') {
-                const senderSpan = document.createElement('span');
-                senderSpan.classList.add('message-sender');
-                senderSpan.textContent = sender + ':';
-                messageDiv.appendChild(senderSpan);
-            }
-            const contentSpan = document.createElement('span');
-            contentSpan.textContent = message;
-            messageDiv.appendChild(contentSpan);
-            */
-
             chatLog.appendChild(messageDiv);
-            // Scroll to bottom smoothly
             chatLog.scrollTo({ top: chatLog.scrollHeight, behavior: 'smooth' });
         }
 
 
-        // --- Initialization ---
-        function initializePeerConnection() {
-            log("Initializing Peer Connection...");
-            if (peerConnection) { // Clean up existing connection if any
-                log("Cleaning up previous connection instance.");
-                peerConnection.close();
+        // --- QR Code Generation ---
+        function displayQrCode(sdpString, type) {
+            let placeholder, container;
+            if (type === 'offer') {
+                placeholder = offerQrCodePlaceholder;
+                container = offerQrCodeContainer;
+            } else { // answer
+                placeholder = answerQrCodePlaceholder;
+                container = answerQrCodeContainer;
             }
-            peerConnection = new RTCPeerConnection(configuration);
 
-            // --- Event Handlers for RTCPeerConnection ---
+            placeholder.innerHTML = ''; // Clear previous QR or 'Generating...' text
+            container.classList.remove('hidden');
+
+            try {
+                new QRCode(placeholder, {
+                    text: sdpString,
+                    width: 200, // Adjust size as needed
+                    height: 200,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.M // Medium correction level for potentially long SDPs
+                });
+                log(`${type.charAt(0).toUpperCase() + type.slice(1)} QR code generated.`);
+            } catch (e) {
+                 log(`Error generating ${type} QR Code: ${e}`);
+                 placeholder.textContent = `Error generating QR Code.`;
+                 console.error("QR Generation Error:", e);
+            }
+        }
+
+        // --- QR Code Scanning ---
+        function startScanner(scanType) { // scanType: 'offer' or 'answer'
+            log(`Starting scanner for ${scanType}...`);
+            qrReaderContainer.classList.remove('hidden');
+            // Disable signaling buttons while scanning
+            createOfferButton.disabled = true;
+            scanOfferButton.disabled = true;
+            scanAnswerButton.disabled = true;
+
+            // Ensure clean slate
+            if (html5QrCodeScanner && html5QrCodeScanner.isScanning) {
+                 stopScanner();
+            }
+
+            const qrboxFunction = function(viewfinderWidth, viewfinderHeight) {
+                // Makes the scan area responsive
+                let minEdgePercentage = 0.7; // 70%
+                let minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
+                let qrboxSize = Math.floor(minEdgeSize * minEdgePercentage);
+                return {
+                    width: qrboxSize,
+                    height: qrboxSize
+                };
+            }
+
+
+            html5QrCodeScanner = new Html5QrcodeScanner(
+                "qrReader", // ID of the element to render the scanner
+                {
+                    fps: 10, // Optional scan speed
+                    qrbox: qrboxFunction, // Optional scan box sizing
+                    rememberLastUsedCamera: true, // Optional
+                    supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
+                },
+                false // verbose = false
+            );
+
+            const onScanSuccess = (decodedText, decodedResult) => {
+                log(`${scanType.charAt(0).toUpperCase() + scanType.slice(1)} QR Scanned Successfully!`);
+                console.log(`Decoded text: ${decodedText}`);
+                stopScanner(); // Stop scanning immediately
+
+                try {
+                    const sdp = JSON.parse(decodedText);
+                    if (scanType === 'offer') {
+                        handleReceivedOffer(sdp);
+                    } else { // answer
+                        handleReceivedAnswer(sdp);
+                    }
+                } catch (e) {
+                    log(`Error parsing scanned ${scanType} SDP: ${e}`);
+                    console.error("SDP Parsing Error:", e);
+                    alert(`Failed to parse the scanned ${scanType} QR code. Ensure it contains valid SDP JSON.`);
+                    // Re-enable buttons to allow retry? Or rely on reset?
+                    resetUiToScanningStart(); // Re-enable initial buttons
+                }
+            };
+
+            const onScanFailure = (error) => {
+                // Log scan failures, but don't stop the scanner unless requested
+                 // console.warn(`QR Scan Failure: ${error}`); // Can be noisy
+            };
+
+            html5QrCodeScanner.render(onScanSuccess, onScanFailure);
+        }
+
+        function stopScanner() {
+            if (html5QrCodeScanner) {
+                html5QrCodeScanner.clear().then(_ => {
+                    log("QR Scanner stopped.");
+                    qrReaderContainer.classList.add('hidden');
+                    // Re-enable appropriate buttons after stopping
+                    // This depends on the current state, handled within specific flows or resetUi
+                }).catch(err => {
+                    log("Error stopping QR scanner: " + err);
+                    console.error("Scanner Stop Error:", err);
+                    qrReaderContainer.classList.add('hidden'); // Hide even if error
+                });
+                 html5QrCodeScanner = null; // Clear instance
+            }
+        }
+
+         // Button to manually stop scanning
+         stopScanButton.onclick = () => {
+            log("Manual stop scanning requested.");
+            stopScanner();
+            resetUiToScanningStart(); // Go back to initial button state
+         };
+
+         // Helper to reset buttons when scanning is cancelled/failed before connection
+         function resetUiToScanningStart() {
+            createOfferButton.disabled = false;
+            scanOfferButton.disabled = false;
+            scanAnswerButton.disabled = true; // Can only scan answer after offer is created
+            offerQrCodeContainer.classList.add('hidden');
+            answerQrCodeContainer.classList.add('hidden');
+         }
+
+
+        // --- WebRTC Initialization and Data Channel ---
+        function initializePeerConnection() {
+             log("Initializing Peer Connection...");
+             if (peerConnection) {
+                 log("Cleaning up previous connection instance.");
+                 peerConnection.close();
+             }
+             peerConnection = new RTCPeerConnection(configuration);
+
             peerConnection.onicecandidate = event => {
                 if (!event.candidate) {
                     log("ICE Candidate gathering complete.");
-                    // Display the final SDP (offer or answer) including all candidates
                     try {
-                        offerAnswerToCopy.value = JSON.stringify(peerConnection.localDescription);
-                        log(`Local description (with candidates) ready to be copied.`);
+                        const sdp = peerConnection.localDescription;
+                        if (!sdp) {
+                            log("Error: Local description is null after ICE gathering.");
+                            return;
+                        }
+                        const sdpString = JSON.stringify(sdp);
+                        if (isInitiator) {
+                            displayQrCode(sdpString, 'offer');
+                            // Enable scanning for the answer only after offer QR is shown
+                            scanAnswerButton.disabled = false;
+                        } else {
+                            displayQrCode(sdpString, 'answer');
+                            // Peer 2 is done with QR generation/scanning now
+                        }
+                         log(`Local ${isInitiator ? 'offer' : 'answer'} (with candidates) ready.`);
                     } catch (e) {
                          log("Error stringifying local description: " + e);
                     }
@@ -301,11 +437,11 @@
                 }
             };
 
-            peerConnection.onconnectionstatechange = event => {
-                log(`Connection State: ${peerConnection.connectionState}`);
+            peerConnection.onconnectionstatechange = event => { /* ... (same as previous) ... */
+                 log(`Connection State: ${peerConnection.connectionState}`);
                 if (peerConnection.connectionState === 'connected') {
                     log("Peers connected!");
-                    // UI updates are now handled by data channel 'open'
+                    // Hide signaling section only when fully connected and data channel open
                 } else if (peerConnection.connectionState === 'failed') {
                     log("Connection failed.");
                     resetConnection();
@@ -315,12 +451,11 @@
                 }
             };
 
-            peerConnection.oniceconnectionstatechange = event => {
+            peerConnection.oniceconnectionstatechange = event => { /* ... (same as previous) ... */
                  log(`ICE Connection State: ${peerConnection.iceConnectionState}`);
                  if (peerConnection.iceConnectionState === 'failed' ||
                      peerConnection.iceConnectionState === 'disconnected' ||
                      peerConnection.iceConnectionState === 'closed') {
-                     // Sometimes connectionstatechange is slow, handle here too
                      resetConnection();
                  }
             };
@@ -334,9 +469,8 @@
              log("Peer Connection Initialized.");
         }
 
-        // --- Data Channel Setup ---
         function setupDataChannelEvents() {
-            if (!dataChannel) {
+             if (!dataChannel) {
                 log("Error: Data channel is null in setupDataChannelEvents.");
                 return;
             }
@@ -349,28 +483,24 @@
                 sendButton.disabled = false;
                 messageInput.focus();
                 // Hide signaling section on successful connection
-                signalingSection.style.display = 'none'; // <<< HIDE UI
+                signalingSection.classList.add('hidden'); // <<< HIDE UI
+                chatSection.classList.remove('hidden'); // Ensure chat is visible
             };
 
-            dataChannel.onclose = () => {
+            dataChannel.onclose = () => { /* ... (same as previous) ... */
                 log("Data channel closed!");
                 logChat("System", "Chat connection closed.");
-                // Don't necessarily reset the entire UI here,
-                // the connection state change handler will call resetConnection
             };
 
-            dataChannel.onerror = error => {
+            dataChannel.onerror = error => { /* ... (same as previous) ... */
                 log(`Data channel error: ${error}`);
                 console.error("Data channel error:", error);
-                 logChat("System", `Error: ${error.message || 'Unknown data channel error'}`);
-                // Consider resetting connection on error
-                // resetConnection(); // Uncomment if desired
+                logChat("System", `Error: ${error.message || 'Unknown data channel error'}`);
             };
 
-            dataChannel.onmessage = event => {
-                log(`Message received: ${event.data}`);
+            dataChannel.onmessage = event => { /* ... (same as previous) ... */
+                 log(`Message received: ${event.data}`);
                 try {
-                    // Basic safety check - could implement JSON parsing if sending structured data
                     const messageText = String(event.data);
                      logChat("Peer", messageText);
                 } catch(e) {
@@ -385,7 +515,7 @@
         // Peer 1: Create Offer
         createOfferButton.onclick = async () => {
             log("Creating Offer...");
-            resetConnection(false); // Soft reset (don't clear chat) before creating offer
+            resetConnection(false); // Soft reset
             isInitiator = true;
             initializePeerConnection();
 
@@ -396,11 +526,11 @@
             try {
                 const offer = await peerConnection.createOffer();
                 await peerConnection.setLocalDescription(offer);
-                log("Offer created and set as local description. Waiting for ICE gathering...");
-                // onicecandidate handler populates textarea when complete
-                createOfferButton.disabled = true;
-                createAnswerButton.disabled = true;
-                addAnswerButton.disabled = false;
+                log("Offer created, set local. Waiting for ICE candidates...");
+                // onicecandidate handler will display QR when gathering is complete
+                createOfferButton.disabled = true; // Don't create multiple offers
+                scanOfferButton.disabled = true; // Initiator doesn't scan offers
+                // scanAnswerButton remains disabled until QR is shown
             } catch (error) {
                 log(`Error creating offer: ${error}`);
                 console.error("Offer creation error:", error);
@@ -408,144 +538,174 @@
             }
         };
 
-        // Peer 2: Receive Offer, Create Answer
-        createAnswerButton.onclick = async () => {
-             const offerData = receivedOfferAnswer.value.trim();
-             if (!offerData) {
-                 alert("Please paste the received Offer first!");
+        // Peer 2: Scan Offer QR Code
+        scanOfferButton.onclick = () => {
+            if (!Html5QrcodeScanner) {
+                 log("Scanner library not loaded correctly.");
                  return;
+            }
+             resetConnection(false); // Soft reset
+            isInitiator = false; // This peer is the answerer
+            startScanner('offer'); // Start scanner, callback will handle SDP
+            scanOfferButton.disabled = true; // Disable while scanning
+            createOfferButton.disabled = true; // Peer 2 doesn't create offer
+        };
+
+        // Peer 1: Scan Answer QR Code
+        scanAnswerButton.onclick = () => {
+             if (!Html5QrcodeScanner) {
+                 log("Scanner library not loaded correctly.");
+                 return;
+            }
+            if (!peerConnection || !peerConnection.localDescription) {
+                log("Cannot scan answer: Offer not created/set yet.");
+                alert("Please create the Offer QR code first.");
+                return;
+            }
+            startScanner('answer'); // Start scanner, callback will handle SDP
+             scanAnswerButton.disabled = true; // Disable while scanning
+        };
+
+        // --- SDP Handling Functions (called after scan/parse) ---
+
+        async function handleReceivedOffer(offerSdp) {
+             log("Processing scanned Offer...");
+             // Peer connection might not be initialized yet for Peer 2
+             if (!peerConnection) {
+                 initializePeerConnection();
+             }
+             // Ensure correct state if pc existed
+             if (peerConnection.signalingState !== 'stable') {
+                log(`Warning: Peer connection state is ${peerConnection.signalingState} before setting remote offer.`);
+                // Potentially reset or handle based on state
              }
 
-            log("Processing received Offer and creating Answer...");
-             resetConnection(false); // Soft reset before processing offer
-            isInitiator = false;
-            initializePeerConnection();
-
              try {
-                const offer = JSON.parse(offerData);
-                log("Received offer parsed.");
-
-                await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(offerSdp));
                 log("Remote description (offer) set successfully.");
 
                 const answer = await peerConnection.createAnswer();
                 await peerConnection.setLocalDescription(answer);
-                log("Answer created and set as local description. Waiting for ICE gathering...");
-                // onicecandidate handler populates textarea when complete
+                log("Answer created, set local. Waiting for ICE candidates...");
+                // onicecandidate handler will display Answer QR Code
 
+                // UI updates for Peer 2
                 createOfferButton.disabled = true;
-                createAnswerButton.disabled = true;
-                addAnswerButton.disabled = true;
-                receivedOfferAnswer.value = '';
+                scanOfferButton.disabled = true;
+                scanAnswerButton.disabled = true; // Peer 2 doesn't scan answers
+
             } catch (error) {
                 log(`Error processing offer or creating answer: ${error}`);
-                console.error("Answer creation error:", error);
+                console.error("Offer/Answer Error:", error);
                 resetConnection();
             }
-        };
+        }
 
-        // Peer 1: Receive Answer
-        addAnswerButton.onclick = async () => {
-            const answerData = receivedOfferAnswer.value.trim();
-             if (!answerData) {
-                 alert("Please paste the received Answer first!");
+        async function handleReceivedAnswer(answerSdp) {
+            log("Processing scanned Answer...");
+             if (!peerConnection || !peerConnection.localDescription || peerConnection.signalingState !== 'have-local-offer') {
+                 log(`Error: Invalid state (${peerConnection?.signalingState}) to receive answer.`);
+                 resetConnection(); // Reset if state is wrong
                  return;
              }
-             if (!peerConnection || !peerConnection.localDescription) {
-                  alert("Invalid state. Create an offer first.");
-                  log("Cannot add answer: No local description set (Offer likely not created or set).");
-                  return;
-             }
-             if (peerConnection.signalingState !== 'have-local-offer') {
-                 alert("Invalid state: " + peerConnection.signalingState + ". Expected 'have-local-offer'.");
-                 log("Cannot add answer: Invalid signaling state: " + peerConnection.signalingState);
-                 return;
-             }
-
-            log("Processing received Answer...");
 
             try {
-                const answer = JSON.parse(answerData);
-                 log("Received answer parsed.");
-
-                await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(answerSdp));
                 log("Remote description (answer) set successfully. Connection establishing...");
+                // Connection process continues automatically...
 
-                addAnswerButton.disabled = true;
-                 receivedOfferAnswer.value = '';
+                // UI updates for Peer 1
+                scanAnswerButton.disabled = true; // Done scanning
+
             } catch (error) {
                 log(`Error processing answer: ${error}`);
                 console.error("Answer processing error:", error);
                 resetConnection();
             }
-        };
+        }
 
 
         // --- Chat Message Sending ---
-        sendButton.onclick = () => {
-            const message = messageInput.value.trim();
+        sendButton.onclick = () => { /* ... (same as previous) ... */
+             const message = messageInput.value.trim();
             if (message && dataChannel && dataChannel.readyState === 'open') {
                 try {
                     dataChannel.send(message);
                     log(`Message sent: ${message}`);
-                    logChat("Me", message); // Use updated logChat
+                    logChat("Me", message);
                     messageInput.value = '';
                     messageInput.focus();
                 } catch (error) {
                     log(`Error sending message: ${error}`);
                     console.error("Send error:", error);
-                    logChat("System", "Error sending message."); // Inform user in chat
+                    logChat("System", "Error sending message.");
                 }
-            } else if (!message) {
-                // Do nothing if message is empty
-            }
+            } else if (!message) { }
             else {
                  log("Cannot send message, data channel is not open or ready.");
-                 logChat("System", "Cannot send message: Connection not ready."); // Inform user in chat
+                 logChat("System", "Cannot send message: Connection not ready.");
             }
         };
-
-        // Allow sending message with Enter key
-         messageInput.addEventListener('keypress', function (e) {
-            if (e.key === 'Enter' && !e.shiftKey && !sendButton.disabled) { // Send on Enter, allow Shift+Enter for newline (though input is single line)
-                sendButton.click(); // Trigger send button click
-                e.preventDefault(); // Prevent default form submission/newline
+         messageInput.addEventListener('keypress', function (e) { /* ... (same as previous) ... */
+             if (e.key === 'Enter' && !e.shiftKey && !sendButton.disabled) {
+                sendButton.click();
+                e.preventDefault();
             }
-        });
+         });
 
 
         // --- Cleanup / Reset ---
-        function resetConnection(clearChatLog = true) { // Added flag to optionally preserve chat
+        function resetConnection(clearChatLog = true) {
             log("Resetting connection state...");
+            stopScanner(); // Ensure scanner is stopped if active
+
             if (dataChannel) {
-                dataChannel.close(); // Attempt to close nicely
-                dataChannel = null; // Nullify reference
+                dataChannel.close();
+                dataChannel = null;
             }
             if (peerConnection) {
-                peerConnection.close(); // Close the connection
-                peerConnection = null; // Nullify reference
+                peerConnection.close();
+                peerConnection = null;
             }
             // Reset UI elements
-            offerAnswerToCopy.value = '';
-            receivedOfferAnswer.value = '';
             messageInput.disabled = true;
             sendButton.disabled = true;
+
+            // Reset signaling UI
+            signalingSection.classList.remove('hidden');
+            qrReaderContainer.classList.add('hidden');
+            offerQrCodeContainer.classList.add('hidden');
+            answerQrCodeContainer.classList.add('hidden');
+            offerQrCodePlaceholder.innerHTML = 'Generating...'; // Reset text
+            answerQrCodePlaceholder.innerHTML = 'Waiting for Offer scan...'; // Reset text
+
+            // Reset buttons to initial state
             createOfferButton.disabled = false;
-            createAnswerButton.disabled = false;
-            addAnswerButton.disabled = false; // Might need adjustment based on state
+            scanOfferButton.disabled = false;
+            scanAnswerButton.disabled = true; // Can only scan answer after offer created
+
             isInitiator = false;
 
             if(clearChatLog) {
-                 chatLog.innerHTML = ''; // Clear chat log only on full reset
+                 chatLog.innerHTML = '';
+                 logChat("System", "Connection Reset.");
+            } else {
+                 logChat("System", "Connection State Reset.");
             }
-
-            signalingSection.style.display = 'block'; // <<< SHOW UI
 
             log("Ready for new connection attempt.");
         }
 
-        // Initial state log
-         log("Page loaded. Ready to start signaling.");
+        // --- Initial Setup ---
+        document.addEventListener('DOMContentLoaded', (event) => {
+             log("Page loaded. Ready to start signaling.");
+             chatSection.classList.remove('hidden'); // Ensure chat section is visible initially (but input disabled)
+             // Hide QR containers initially
+             offerQrCodeContainer.classList.add('hidden');
+             answerQrCodeContainer.classList.add('hidden');
+             qrReaderContainer.classList.add('hidden');
+        });
+
 
     </script>
 
