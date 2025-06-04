@@ -2,7 +2,7 @@
   "name": "Gemini Chat",
   "short_name": "GChat",
   "description": "A web application for interacting with Gemini Chat.",
-  "start_url": "/",
+  "start_url": "/apps/gemini-chat",
   "display": "standalone",
   "background_color": "white",
   "theme_color": "lightblue",
