@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mental Math Game</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+    <div class="container">
+        <img src="icons/icon.webp" alt="Math Icon" class="main-icon">
+        <h1>Mental Math Practice</h1>
+        <div id="game-setup">
+            <h4>Get ready to practice your math skills</h4>
+            <button id="start-btn">Start Game</button>
+        </div>
+        <div id="game-area" class="hidden">
+            <div id="stats">
+                <p>Score: <span id="score">0</span></p>
+                <p>Time: <span id="timer">60</span>s</p>
+            </div>
+            <div id="problem"></div>
+            <div id="options-container"></div>
+        </div>
+        <div id="game-over" class="hidden">
+            <h2>Game Over!</h2>
+            <p>Your final score is <span id="final-score"></span>.</p>
+            <button id="play-again">Play Again</button>
+        </div>
+        <div id="feedback-indicator" class="hidden"></div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
