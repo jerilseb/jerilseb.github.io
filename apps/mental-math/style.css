@@ -82,13 +82,68 @@ button:hover {
     background-color: #4CAF50; /* Green */
     color: white;
     border: none;
-    margin-top: 2rem;
 }
 
 #start-btn:hover {
     background-color: #45a049;
 }
+
 .main-icon {
     width: 100px;
     margin-bottom: 1rem;
+}
+
+#game-setup button {
+    display: block;
+    width: 60%;
+    margin: 1.5rem auto;
+}
+
+#player-name {
+    width: 80%;
+    padding: 0.8rem;
+    margin-bottom: 1rem;
+    border-radius: 5px;
+    border: 1px solid #444;
+    background-color: #333;
+    color: #ffffff;
+    font-size: 1rem;
+}
+
+#leaderboard-btn {
+    background-color: #008CBA; /* Blue */
+}
+
+#leaderboard-btn:hover {
+    background-color: #007B9A;
+}
+
+#leaderboard {
+    text-align: center;
+}
+
+#leaderboard-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 2rem auto
+}
+
+#leaderboard-table th,
+#leaderboard-table td {
+    padding: 0.75rem;
+    border-bottom: 1px solid #444;
+}
+
+#leaderboard-table th {
+    text-align: left;
+    background-color: #333;
+}
+
+#back-to-menu {
+    margin-top: 1rem;
+    background-color: #f44336; /* Red */
+}
+
+#back-to-menu:hover {
+    background-color: #da190b;
 }

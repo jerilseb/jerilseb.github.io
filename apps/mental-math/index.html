@@ -1,19 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mental Math Game</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
+
 <body>
     <div class="container">
         <img src="icons/icon.webp" alt="Math Icon" class="main-icon">
         <h1>Mental Math Practice</h1>
         <div id="game-setup">
-            <h4>Get ready to practice your math skills</h4>
+            <div id="name-prompt">
+                <h4>Enter your name to start</h4>
+                <p id="name-error" class="hidden" style="color: #f44336;">Please enter your name to start the game.</p>
+                <input type="text" id="player-name" placeholder="Enter your name">
+            </div>
+            <div id="welcome-back" class="hidden">
+                <h4>Welcome back, <span id="welcome-name"></span>!</h4>
+            </div>
             <button id="start-btn">Start Game</button>
+            <button id="leaderboard-btn">Leaderboard</button>
+            <button id="change-name-btn" class="hidden">Change Name</button>
+        </div>
+        <div id="leaderboard" class="hidden">
+            <h2>Leaderboard</h2>
+            <table id="leaderboard-table">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Name</th>
+                        <th>Score</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboard-body"></tbody>
+            </table>
+            <button id="back-to-menu">Back to Menu</button>
         </div>
         <div id="game-area" class="hidden">
             <div id="stats">
@@ -30,6 +56,7 @@
         </div>
         <div id="feedback-indicator" class="hidden"></div>
     </div>
-    <script src="script.js"></script>
+    <script src="script.js" type="module"></script>
 </body>
+
 </html>

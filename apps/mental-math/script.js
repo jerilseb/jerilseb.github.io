@@ -1,8 +1,22 @@
+const { createClient } = supabase;
+const supabaseUrl = 'https://rmethuurxctjakzkjlaf.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtZXRodXVyeGN0amFremtqbGFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE1MTkwMjUsImV4cCI6MjA1NzA5NTAyNX0.qYkFNpxOSRVAq3kDy08nM14xo9va3tGik02x1tthtUM';
+const supabaseClient = createClient(supabaseUrl, supabaseKey);
+
 const gameSetup = document.getElementById('game-setup');
 const gameArea = document.getElementById('game-area');
 const gameOver = document.getElementById('game-over');
-
 const startBtn = document.getElementById('start-btn');
+const playerNameInput = document.getElementById('player-name');
+const nameError = document.getElementById('name-error');
+const leaderboardBtn = document.getElementById('leaderboard-btn');
+const namePrompt = document.getElementById('name-prompt');
+const welcomeBack = document.getElementById('welcome-back');
+const welcomeName = document.getElementById('welcome-name');
+const changeNameBtn = document.getElementById('change-name-btn');
+const leaderboardView = document.getElementById('leaderboard');
+const leaderboardTableBody = document.getElementById('leaderboard-body');
+const backToMenuBtn = document.getElementById('back-to-menu');
 
 const scoreEl = document.getElementById('score');
 const timerEl = document.getElementById('timer');
@@ -19,6 +33,17 @@ let correctAnswer;
 let questionCount;
 
 const startGame = () => {
+    let playerName = localStorage.getItem('currentPlayer');
+    if (!playerName) {
+        playerName = playerNameInput.value.trim();
+        if (!playerName) {
+            nameError.classList.remove('hidden');
+            return;
+        }
+        nameError.classList.add('hidden');
+        localStorage.setItem('currentPlayer', playerName);
+    }
+
     score = 0;
     questionCount = 0;
     timer = 60;
@@ -151,12 +176,80 @@ const endGame = () => {
     gameArea.classList.add('hidden');
     gameOver.classList.remove('hidden');
     finalScoreEl.textContent = score;
+    saveScore(localStorage.getItem('currentPlayer'), score);
 };
+
+const saveScore = async (name, score) => {
+    await supabaseClient
+        .from('mental-math-scores')
+        .insert([{ player_name: name, score: score }]);
+};
+
+const showLeaderboard = async () => {
+    gameSetup.classList.add('hidden');
+    leaderboardView.classList.remove('hidden');
+
+    const { data: scores, error } = await supabaseClient
+        .from('mental-math-scores')
+        .select('player_name, score')
+        .order('score', { ascending: false });
+
+    if (error) {
+        console.error('Error fetching scores:', error);
+        return;
+    }
+
+    leaderboardTableBody.innerHTML = '';
+    scores.forEach((score, index) => {
+        const row = document.createElement('tr');
+        const rankCell = document.createElement('td');
+        rankCell.textContent = index + 1;
+        const nameCell = document.createElement('td');
+        nameCell.textContent = score.player_name;
+        const scoreCell = document.createElement('td');
+        scoreCell.textContent = score.score;
+        row.appendChild(rankCell);
+        row.appendChild(nameCell);
+        row.appendChild(scoreCell);
+        leaderboardTableBody.appendChild(row);
+    });
+};
+
+const showMenu = () => {
+    leaderboardView.classList.add('hidden');
+    gameSetup.classList.remove('hidden');
+    initializeWelcomeScreen();
+}
 
 const playAgain = () => {
     gameOver.classList.add('hidden');
     gameSetup.classList.remove('hidden');
+    initializeWelcomeScreen();
+};
+
+const changeName = () => {
+    localStorage.removeItem('currentPlayer');
+    initializeWelcomeScreen();
+};
+
+const initializeWelcomeScreen = () => {
+    const playerName = localStorage.getItem('currentPlayer');
+    if (playerName) {
+        namePrompt.classList.add('hidden');
+        welcomeBack.classList.remove('hidden');
+        welcomeName.textContent = playerName;
+        changeNameBtn.classList.remove('hidden');
+    } else {
+        namePrompt.classList.remove('hidden');
+        welcomeBack.classList.add('hidden');
+        changeNameBtn.classList.add('hidden');
+    }
 };
 
 startBtn.addEventListener('click', startGame);
 playAgainBtn.addEventListener('click', playAgain);
+leaderboardBtn.addEventListener('click', showLeaderboard);
+backToMenuBtn.addEventListener('click', showMenu);
+changeNameBtn.addEventListener('click', changeName);
+
+initializeWelcomeScreen();
