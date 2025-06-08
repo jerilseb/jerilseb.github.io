@@ -16,7 +16,9 @@ const welcomeName = document.getElementById('welcome-name');
 const changeNameBtn = document.getElementById('change-name-btn');
 const leaderboardView = document.getElementById('leaderboard');
 const leaderboardTableBody = document.getElementById('leaderboard-body');
+const leaderboardTable = document.getElementById('leaderboard-table');
 const backToMenuBtn = document.getElementById('back-to-menu');
+const loader = document.getElementById('loader');
 
 const scoreEl = document.getElementById('score');
 const timerEl = document.getElementById('timer');
@@ -185,34 +187,52 @@ const saveScore = async (name, score) => {
         .insert([{ player_name: name, score: score }]);
 };
 
-const showLeaderboard = async () => {
+const showLeaderboard = () => {
     gameSetup.classList.add('hidden');
     leaderboardView.classList.remove('hidden');
-
-    const { data: scores, error } = await supabaseClient
-        .from('mental-math-scores')
-        .select('player_name, score')
-        .order('score', { ascending: false });
-
-    if (error) {
-        console.error('Error fetching scores:', error);
-        return;
-    }
-
+    loader.classList.remove('hidden');
+    leaderboardTable.classList.add('hidden');
     leaderboardTableBody.innerHTML = '';
-    scores.forEach((score, index) => {
-        const row = document.createElement('tr');
-        const rankCell = document.createElement('td');
-        rankCell.textContent = index + 1;
-        const nameCell = document.createElement('td');
-        nameCell.textContent = score.player_name;
-        const scoreCell = document.createElement('td');
-        scoreCell.textContent = score.score;
-        row.appendChild(rankCell);
-        row.appendChild(nameCell);
-        row.appendChild(scoreCell);
-        leaderboardTableBody.appendChild(row);
-    });
+
+    setTimeout(async () => {
+        try {
+            const { data: scores, error } = await supabaseClient
+                .from('mental-math-scores')
+                .select('player_name, score')
+                .order('score', { ascending: false })
+                .limit(5);
+
+            if (error) {
+                console.error('Error fetching scores:', error);
+                leaderboardTableBody.innerHTML = '<tr><td colspan="3">Error loading scores.</td></tr>';
+                return;
+            }
+
+            if (scores.length === 0) {
+                leaderboardTableBody.innerHTML = '<tr><td colspan="3">No scores yet. Be the first!</td></tr>';
+            } else {
+                scores.forEach((score, index) => {
+                    const row = document.createElement('tr');
+                    const rankCell = document.createElement('td');
+                    rankCell.textContent = index + 1;
+                    const nameCell = document.createElement('td');
+                    nameCell.textContent = score.player_name;
+                    const scoreCell = document.createElement('td');
+                    scoreCell.textContent = score.score;
+                    row.appendChild(rankCell);
+                    row.appendChild(nameCell);
+                    row.appendChild(scoreCell);
+                    leaderboardTableBody.appendChild(row);
+                });
+            }
+        } catch (err) {
+            console.error('An unexpected error occurred:', err);
+            leaderboardTableBody.innerHTML = '<tr><td colspan="3">An unexpected error occurred.</td></tr>';
+        } finally {
+            loader.classList.add('hidden');
+            leaderboardTable.classList.remove('hidden');
+        }
+    }, 0);
 };
 
 const showMenu = () => {
